@@ -1,0 +1,55 @@
+{
+  "name": "@dragapp/mcp-server",
+  "version": "0.1.2",
+  "mcpName": "com.dragapp/mcp-server",
+  "description": "MCP server for DragApp — manage your shared inbox from any AI tool",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "dragapp-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "dragapp",
+    "shared-inbox",
+    "gmail",
+    "email",
+    "ai",
+    "claude",
+    "chatgpt",
+    "cursor"
+  ],
+  "author": "DragApp <hello@dragapp.com> (https://dragapp.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nick-timms/drag-mcp-server"
+  },
+  "homepage": "https://github.com/nick-timms/drag-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/nick-timms/drag-mcp-server/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
