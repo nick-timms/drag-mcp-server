@@ -59,7 +59,7 @@ for (const tool of whatsappTools) TOOL_HANDLERS[tool.name] = handleWhatsappTool;
 const server = new Server(
   {
     name: "dragapp",
-    version: "0.1.2",
+    version: "0.1.3",
   },
   {
     capabilities: {
@@ -133,7 +133,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("DragApp MCP Server v0.1.2 running on stdio");
+  console.error("DragApp MCP Server v0.1.3 running on stdio");
 }
 
 main().catch(console.error);

@@ -1,6 +1,6 @@
 {
   "name": "@dragapp/mcp-server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "mcpName": "com.dragapp/mcp-server",
   "description": "MCP server for DragApp — manage your shared inbox from any AI tool",
   "type": "module",
