@@ -1,6 +1,6 @@
 # DragApp MCP Server
 
-An [MCP](https://modelcontextprotocol.io) server for [DragApp](https://dragapp.com) — the shared inbox built on Gmail. Read emails, reply, search threads, manage boards, and more from Claude, ChatGPT, Cursor, or any MCP-compatible AI tool.
+An [MCP](https://modelcontextprotocol.io) server for [DragApp](https://dragapp.com) — AI-powered email & WhatsApp for teams. Read and reply to emails, send WhatsApp messages, search threads, manage boards, and more from Claude, ChatGPT, Cursor, or any MCP-compatible AI tool.
 
 ## Setup
 
@@ -82,10 +82,19 @@ Ask your AI assistant:
 ### Automations (3 tools)
 `list_automations` · `toggle_automation` · `toggle_ai_drafts`
 
-### Other
-`add_comment` · `get_comment` · `list_tags` · `add_tag_to_card` · `create_task`
+### WhatsApp (4 tools)
+`send_whatsapp_message` · `send_whatsapp_template` · `list_whatsapp_templates` · `get_whatsapp_conversation`
 
-**43 tools total.**
+### Comments (2 tools)
+`add_comment` · `get_comment`
+
+### Tags (2 tools)
+`list_tags` · `add_tag_to_card`
+
+### Tasks (1 tool)
+`create_task`
+
+**47 tools across 12 categories.**
 
 ## Development
 
@@ -97,6 +106,28 @@ cp .env.example .env  # add your API key
 npm run build
 npm start
 ```
+
+### Secret-scanning pre-commit hook
+
+This is a **public** repository. Before committing, install the pre-commit hook so
+[gitleaks](https://github.com/gitleaks/gitleaks) scans your staged changes for
+secrets (keys, JWTs, tokens) and for internal names that must not appear here:
+
+```bash
+pip install pre-commit   # one-time, if you don't have it
+pre-commit install       # installs the git hook in this repo
+```
+
+Run it manually against everything at any time:
+
+```bash
+pre-commit run --all-files
+```
+
+The hook uses [`.gitleaks.toml`](./.gitleaks.toml). The same scan runs in CI on every
+push and pull request (`.github/workflows/secret-scan.yml`), and `npm publish` is
+blocked by a tarball guard (`scripts/check-tarball.mjs`) if the built package
+contains any internal name.
 
 ## License
 
