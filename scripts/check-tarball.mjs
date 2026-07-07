@@ -3,34 +3,39 @@
  * prepublishOnly guard for @dragapp/mcp-server (PUBLIC package).
  *
  * Packs the tarball exactly as it would ship to npm, extracts it, and greps
- * EVERY packaged file (compiled dist/, package.json, and — importantly —
- * *.map source maps, which embed the original TypeScript source incl. comments)
- * for internal repo/function names. Aborts `npm publish` if any are found.
+ * EVERY packaged file (compiled dist/, package.json, and *.map source maps —
+ * which embed the original TypeScript source incl. comments) for a list of
+ * sensitive terms that must never ship. Aborts `npm publish` if any are found.
  *
- * This is the check that would have caught the original npm leak: TypeScript
- * comments survive into compiled output, and even with `removeComments` the
- * source maps still embed the original source.
+ * The term list is intentionally NOT stored in this public repo. It is read
+ * from either:
+ *   (a) the FORBIDDEN_TERMS env var (comma-separated), or
+ *   (b) an untracked local file `.forbidden-terms` (one term per line; blank
+ *       lines and lines starting with `#` are ignored).
  *
- * Canonical forbidden-term list — mirror any change in .gitleaks.toml.
+ * If neither is present, the guard prints a warning and PASSES, so external
+ * contributors can still build and publish forks without the private list.
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const FORBIDDEN = [
-  "Dragsters-backend",
-  "drag-automations",
-  "drag-web",
-  "drag-marketing",
-  "Drag-pub-sub",
-  "drag-chat",
-  "CreateCardMapper",
-  "fetchTaskDetails",
-  "SendAsEmailContent",
-  "JWTSECRET",
-];
-const NEEDLES = FORBIDDEN.map((t) => t.toLowerCase());
+function loadForbiddenTerms() {
+  const env = process.env.FORBIDDEN_TERMS;
+  if (env && env.trim()) {
+    return { source: "FORBIDDEN_TERMS env var", terms: env.split(",").map((s) => s.trim()).filter(Boolean) };
+  }
+  const file = join(process.cwd(), ".forbidden-terms");
+  if (existsSync(file)) {
+    const terms = readFileSync(file, "utf8")
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter((s) => s && !s.startsWith("#"));
+    return { source: ".forbidden-terms", terms };
+  }
+  return null;
+}
 
 function walk(dir) {
   const out = [];
@@ -47,8 +52,18 @@ function fail(msg) {
   process.exit(1);
 }
 
+const loaded = loadForbiddenTerms();
+if (!loaded || loaded.terms.length === 0) {
+  console.error(
+    "⚠ tarball guard: no term list found — set FORBIDDEN_TERMS or create a local .forbidden-terms file. Skipping sensitive-term scan (build not blocked).",
+  );
+  process.exit(0);
+}
+const FORBIDDEN = loaded.terms;
+const NEEDLES = FORBIDDEN.map((t) => t.toLowerCase());
+
 // 1. Pack the tarball. --ignore-scripts avoids re-triggering lifecycle scripts
-//    (this script runs from prepublishOnly, so npm pack must not recurse).
+//    (this runs from prepublishOnly, so npm pack must not recurse).
 const dest = mkdtempSync(join(tmpdir(), "dragapp-tarball-"));
 try {
   execFileSync("npm", ["pack", "--ignore-scripts", "--pack-destination", dest], {
@@ -82,11 +97,7 @@ for (const file of files) {
     const ll = line.toLowerCase();
     for (let t = 0; t < NEEDLES.length; t++) {
       if (ll.includes(NEEDLES[t])) {
-        findings.push({
-          file: file.slice(root.length + 1),
-          line: i + 1,
-          term: FORBIDDEN[t],
-        });
+        findings.push({ file: file.slice(root.length + 1), line: i + 1, term: FORBIDDEN[t] });
       }
     }
   });
@@ -94,13 +105,11 @@ for (const file of files) {
 
 // 4. Report.
 console.error(
-  `tarball guard: packed ${tgz}, scanned ${files.length} shipped files for ${FORBIDDEN.length} forbidden terms`,
+  `tarball guard: packed ${tgz}, scanned ${files.length} shipped files against ${FORBIDDEN.length} term(s) from ${loaded.source}`,
 );
 if (findings.length > 0) {
   console.error(`\nFound ${findings.length} forbidden-term occurrence(s) in the SHIPPED package:`);
-  for (const f of findings) {
-    console.error(`  ${f.file}:${f.line}  →  ${f.term}`);
-  }
-  fail("internal names present in the package that would be published to npm");
+  for (const f of findings) console.error(`  ${f.file}:${f.line}  →  ${f.term}`);
+  fail("sensitive term(s) present in the package that would be published to npm");
 }
-console.error("✓ tarball guard passed — no internal names in the shipped package");
+console.error("✓ tarball guard passed — no forbidden terms in the shipped package");

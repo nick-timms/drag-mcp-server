@@ -111,7 +111,7 @@ npm start
 
 This is a **public** repository. Before committing, install the pre-commit hook so
 [gitleaks](https://github.com/gitleaks/gitleaks) scans your staged changes for
-secrets (keys, JWTs, tokens) and for internal names that must not appear here:
+secrets (keys, JWTs, tokens):
 
 ```bash
 pip install pre-commit   # one-time, if you don't have it
@@ -125,9 +125,9 @@ pre-commit run --all-files
 ```
 
 The hook uses [`.gitleaks.toml`](./.gitleaks.toml). The same scan runs in CI on every
-push and pull request (`.github/workflows/secret-scan.yml`), and `npm publish` is
-blocked by a tarball guard (`scripts/check-tarball.mjs`) if the built package
-contains any internal name.
+push and pull request (`.github/workflows/secret-scan.yml`), and `npm publish` runs a
+tarball guard (`scripts/check-tarball.mjs`) that blocks the release if the built
+package contains any known-sensitive term.
 
 ## License
 

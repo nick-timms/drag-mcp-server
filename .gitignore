@@ -19,3 +19,6 @@ dist/
 *.hex
 *.key
 *privkey*
+
+# Private list of sensitive terms the tarball guard enforces (never published)
+.forbidden-terms
