@@ -19,6 +19,13 @@ import { analyticsTools, handleAnalyticsTool } from "./tools/analytics.js";
 import { automationTools, handleAutomationTool } from "./tools/automations.js";
 import { whatsappTools, handleWhatsappTool } from "./tools/whatsapp.js";
 import { normaliseError } from "./utils/errors.js";
+import { readFileSync } from "node:fs";
+
+// Read version from package.json at runtime so it can never drift from the
+// published version. dist/index.js sits one level below the package root.
+const { version: VERSION } = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+) as { version: string };
 
 const ALL_TOOLS = [
   ...boardTools,      // 5 tools
@@ -59,7 +66,7 @@ for (const tool of whatsappTools) TOOL_HANDLERS[tool.name] = handleWhatsappTool;
 const server = new Server(
   {
     name: "dragapp",
-    version: "0.1.3",
+    version: VERSION,
   },
   {
     capabilities: {
@@ -133,7 +140,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("DragApp MCP Server v0.1.3 running on stdio");
+  console.error(`DragApp MCP Server v${VERSION} running on stdio`);
 }
 
 main().catch(console.error);

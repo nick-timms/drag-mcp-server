@@ -1,6 +1,6 @@
 {
   "name": "@dragapp/mcp-server",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "mcpName": "com.dragapp/mcp-server",
   "description": "AI-powered email & WhatsApp management for teams — manage your Gmail shared inbox from Claude, Cursor, ChatGPT, and other AI tools. 47 tools across 12 categories.",
   "type": "module",
