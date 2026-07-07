@@ -1,0 +1,21 @@
+# Pre-commit hooks for @dragapp/mcp-server (PUBLIC repo)
+# Install:  pip install pre-commit && pre-commit install
+# Run manually on everything:  pre-commit run --all-files
+#
+# The gitleaks hook uses the repo-root .gitleaks.toml, which keeps gitleaks'
+# built-in secret detection AND blocks internal repo/function names.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        name: gitleaks (secrets + internal-name scan)
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+      - id: end-of-file-fixer
+      - id: check-merge-conflict

@@ -1,11 +1,21 @@
+# Dependencies & build output
 node_modules/
 dist/
-.env
-.env.local
+*.tgz
+
+# Logs
 *.log
+
+# OS cruft
 .DS_Store
 
-# Secrets / signing keys (never commit)
-*.hex
-*privkey*
+# Environment files — NEVER commit real env, only the placeholder template
+.env
+.env.*
+!.env.example
+
+# Secrets / signing keys — never commit
 *.pem
+*.hex
+*.key
+*privkey*

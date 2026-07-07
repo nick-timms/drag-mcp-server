@@ -1,0 +1,50 @@
+# gitleaks configuration for @dragapp/mcp-server (PUBLIC repo)
+#
+# Keeps all of gitleaks' built-in secret detection (keys, JWTs, tokens) via
+# `[extend] useDefault = true`, and adds a custom rule that blocks internal
+# repo names and backend symbol names from ever entering the codebase.
+#
+# The canonical forbidden-term list is mirrored in scripts/check-tarball.mjs.
+# Update BOTH when adding a term.
+
+title = "DragApp MCP Server leak-prevention config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "dragapp-internal-names"
+description = "Internal repo/function names must not appear in this public repo"
+# Case-insensitive; hyphens are literal. Matches internal repo and symbol names.
+regex = '''(?i)(Dragsters-backend|drag-automations|drag-web|drag-marketing|Drag-pub-sub|drag-chat|CreateCardMapper|fetchTaskDetails|SendAsEmailContent|JWTSECRET)'''
+keywords = [
+  "dragsters-backend",
+  "drag-automations",
+  "drag-web",
+  "drag-marketing",
+  "drag-pub-sub",
+  "drag-chat",
+  "createcardmapper",
+  "fetchtaskdetails",
+  "sendasemailcontent",
+  "jwtsecret",
+]
+tags = ["internal-name", "public-repo"]
+
+  # The definition files legitimately list these terms as their denylist.
+  # Exempt them from THIS rule only — default secret rules still scan them.
+  [[rules.allowlists]]
+  description = "Guardrail definition files that contain the denylist itself"
+  paths = [
+    '''(^|/)\.gitleaks\.toml$''',
+    '''(^|/)CLAUDE\.md$''',
+    '''(^|/)scripts/check-tarball\.mjs$''',
+  ]
+
+# Global allowlist: reduce false positives on files that are safe by construction.
+[[allowlists]]
+description = "Placeholder env template and lockfile integrity hashes"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)package-lock\.json$''',
+]
