@@ -8,20 +8,33 @@ export class DragApiError extends Error {
   }
 }
 
+/** Default public base URL for the DragApp API. */
+const DEFAULT_API_BASE = "https://app.dragapp.com";
+
+/**
+ * Resolve the DragApp API base URL. Defaults to the public edge; override with
+ * DRAG_API_BASE (no trailing slash) so a hosted deployment inside the VPC can
+ * point at an internal address and avoid hairpinning through the public edge.
+ */
+function resolveApiBase(): string {
+  const configured = process.env.DRAG_API_BASE?.trim();
+  return (configured || DEFAULT_API_BASE).replace(/\/+$/, "");
+}
+
 /** HTTP client for the DragApp API. Handles both v1.18 and v2 endpoints. Callers pass the full path: client.get("/v2/board") or client.post("/v1.18/teamBoard/list") */
 export class DragClient {
   private readonly token: string;
   private readonly clientId: string;
-
-  private static readonly BASE = "https://app.dragapp.com";
+  private readonly base: string;
 
   constructor(token: string) {
     this.token = token;
     this.clientId = crypto.randomUUID();
+    this.base = resolveApiBase();
   }
 
   async get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
-    const url = new URL(`${DragClient.BASE}${path}`);
+    const url = new URL(`${this.base}${path}`);
     if (params) {
       for (const [key, value] of Object.entries(params)) {
         if (value !== undefined && value !== null) {
@@ -37,7 +50,7 @@ export class DragClient {
     body?: Record<string, unknown>,
     params?: Record<string, string | number>,
   ): Promise<T> {
-    const url = new URL(`${DragClient.BASE}${path}`);
+    const url = new URL(`${this.base}${path}`);
     if (params) {
       for (const [key, value] of Object.entries(params)) {
         if (value !== undefined && value !== null) {
@@ -49,11 +62,11 @@ export class DragClient {
   }
 
   async put<T>(path: string, body?: Record<string, unknown>): Promise<T> {
-    return this.request<T>("PUT", `${DragClient.BASE}${path}`, body);
+    return this.request<T>("PUT", `${this.base}${path}`, body);
   }
 
   async delete<T>(path: string, body?: Record<string, unknown>): Promise<T> {
-    return this.request<T>("DELETE", `${DragClient.BASE}${path}`, body);
+    return this.request<T>("DELETE", `${this.base}${path}`, body);
   }
 
   private async request<T>(method: string, url: string, body?: Record<string, unknown>): Promise<T> {

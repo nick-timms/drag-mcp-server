@@ -1,0 +1,33 @@
+# systemd unit for the hosted MCP HTTP endpoint.
+#   sudo cp deploy/drag-mcp.service /etc/systemd/system/
+#   sudo cp deploy/drag-mcp.env      /etc/drag-mcp.env    # your real values (chmod 600)
+#   sudo systemctl daemon-reload && sudo systemctl enable --now drag-mcp
+#
+# Build the app first: npm ci && npm run build (in WorkingDirectory).
+
+[Unit]
+Description=DragApp MCP Server (HTTP remote endpoint)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust to where the checkout lives on the box.
+WorkingDirectory=/opt/drag-mcp-server
+ExecStart=/usr/bin/node dist/http.js
+# All config comes from the environment. Keep secrets in this 0600 file, not here.
+EnvironmentFile=/etc/drag-mcp.env
+Restart=always
+RestartSec=2
+# Run as an unprivileged user; create it once: sudo useradd --system --no-create-home dragmcp
+User=dragmcp
+Group=dragmcp
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/opt/drag-mcp-server
+
+[Install]
+WantedBy=multi-user.target

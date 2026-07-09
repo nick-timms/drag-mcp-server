@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.github
+*.log
+*.tgz
+.env
+.env.*
+!.env.example
+.forbidden-terms
+*.pem
+*.hex
+*.key
