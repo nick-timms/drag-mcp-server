@@ -17,7 +17,7 @@ const PORT = Number(process.env.MCP_PORT) || 3001;
 const MCP_PATH = process.env.MCP_PATH || "/mcp";
 
 const MISSING_TOKEN_MESSAGE =
-  "No DragApp API key provided. Send it in the Authorization header (raw token or 'Bearer <token>'). Get your key from DragApp → Settings → Integrations.";
+  "No DragApp API key provided. Send it in the Authorization header (raw token or 'Bearer <token>'), or as a ?key= query parameter on the connector URL. Get your key from DragApp → Settings → Integrations.";
 
 const rateLimiter = createRateLimiter();
 
@@ -46,15 +46,21 @@ function jsonRpcError(code: number, message: string) {
   return { jsonrpc: "2.0" as const, error: { code, message }, id: null };
 }
 
-/** Extract the DragApp token from the Authorization header. Accepts a raw
- *  token or "Bearer <token>". Never logged. */
-function extractToken(req: IncomingMessage): string | undefined {
+/** Extract the DragApp token, preferring the Authorization header (raw token
+ *  or "Bearer <token>") and falling back to a ?key= query parameter. The query
+ *  fallback exists because some connector UIs (e.g. Claude.ai's custom
+ *  connector) cannot attach an Authorization header, so the key must ride on
+ *  the URL instead. Never logged. */
+function extractToken(req: IncomingMessage, url: URL): string | undefined {
   const header = req.headers["authorization"];
-  if (!header || typeof header !== "string") return undefined;
-  const trimmed = header.trim();
-  if (trimmed === "") return undefined;
-  const bearer = /^Bearer\s+(.+)$/i.exec(trimmed);
-  return (bearer ? bearer[1] : trimmed).trim() || undefined;
+  if (typeof header === "string" && header.trim() !== "") {
+    const trimmed = header.trim();
+    const bearer = /^Bearer\s+(.+)$/i.exec(trimmed);
+    const fromHeader = (bearer ? bearer[1] : trimmed).trim();
+    if (fromHeader) return fromHeader;
+  }
+  const fromQuery = url.searchParams.get("key");
+  return fromQuery?.trim() || undefined;
 }
 
 /** Client IP for the unauthenticated rate-limit fallback. Behind NGINX the
@@ -104,7 +110,8 @@ async function requestHandler(
   setCors(res);
 
   const method = req.method || "GET";
-  const pathname = new URL(req.url || "/", "http://localhost").pathname;
+  const url = new URL(req.url || "/", "http://localhost");
+  const pathname = url.pathname;
 
   // CORS preflight.
   if (method === "OPTIONS") {
@@ -135,7 +142,7 @@ async function requestHandler(
     return;
   }
 
-  const token = extractToken(req);
+  const token = extractToken(req, url);
 
   // Rate limit BEFORE dispatch. Scope per token (hashed inside the limiter);
   // fall back to client IP for unauthenticated requests.
