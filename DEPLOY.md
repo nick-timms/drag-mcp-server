@@ -103,12 +103,24 @@ against `/health`. `CMD` is `node dist/http.js`.
 
 ```bash
 npm ci && npm run build
-pm2 start ecosystem.config.cjs
+pm2 start dist/http.js --name mcp-http \
+  --node-args="--env-file=/absolute/path/to/.env"
 pm2 save && pm2 startup
 ```
 
+⚠️ Two traps that both produce a silent non-working deploy:
+
+1. **`npm start` starts the WRONG entry point.** It runs `dist/index.js` — the
+   stdio server for local AI clients — which listens on no port and just waits
+   on stdin forever. PM2 will happily report it "online" while NGINX gets 502.
+   The HTTP server is `dist/http.js` (`npm run start:http`).
+2. **PM2 does not read `.env` files.** A `.env` next to the code does nothing
+   unless the process is told to load it — use Node's native
+   `--node-args="--env-file=…"` as above (Node ≥ 20.12), or put the vars in
+   `ecosystem.config.cjs` (but never commit secrets there).
+
 Stateless, so `instances: "max"` + `exec_mode: "cluster"` is safe if you want to
-use all cores. See `ecosystem.config.cjs`.
+use all cores.
 
 ## Deploy option C — systemd
 
