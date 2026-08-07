@@ -3,6 +3,7 @@ import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer, VERSION } from "./server.js";
 import { createRateLimiter } from "./rateLimit.js";
+import { createOAuthRouter, WWW_AUTHENTICATE } from "./oauth.js";
 
 // HTTP entry point for the hosted remote endpoint (app.dragapp.com/mcp).
 // Additive to the stdio entry point (src/index.ts) — same 47 tools, same API
@@ -17,9 +18,12 @@ const PORT = Number(process.env.MCP_PORT) || 3001;
 const MCP_PATH = process.env.MCP_PATH || "/mcp";
 
 const MISSING_TOKEN_MESSAGE =
-  "No DragApp API key provided. Send it in the Authorization header (raw token or 'Bearer <token>'), or as a ?key= query parameter on the connector URL. Get your key from DragApp → Settings → Integrations.";
+  "Authentication required. Your AI client can connect via OAuth (a DragApp connect page will open), or send your DragApp API key in the Authorization header (raw token or 'Bearer <token>') or as a ?key= query parameter on the connector URL. Get your key from DragApp → Settings → Integrations.";
 
 const rateLimiter = createRateLimiter();
+const oauth = createOAuthRouter({
+  rateLimitByIp: (req) => rateLimiter.check(`ip:${clientIp(req)}`),
+});
 
 /** Permissive CORS — the token is user-supplied per request (not a cookie), so
  *  any origin is acceptable. Browser MCP clients (e.g. Claude.ai web) preflight. */
@@ -126,8 +130,23 @@ async function requestHandler(
     return;
   }
 
+  // OAuth: discovery metadata, /register, /authorize, /token.
+  if (await oauth.handle(req, res, url, method)) {
+    return;
+  }
+
   if (!isMcpPath(pathname)) {
     sendJson(res, 404, jsonRpcError(-32601, "Not found"));
+    return;
+  }
+
+  // A person pasting the connector URL into a browser gets a hint page
+  // instead of a bare JSON error.
+  if (method === "GET" && (req.headers.accept || "").includes("text/html")) {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(
+      `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>DragApp MCP Server</title></head><body style="font-family:sans-serif;max-width:600px;margin:60px auto;line-height:1.6"><h1>DragApp MCP Server</h1><p>This is an MCP endpoint for AI clients, not a web page. Add it as a custom connector in Claude, ChatGPT, or Gemini using this URL — you'll be asked to authorize with your DragApp account.</p></body></html>`,
+    );
     return;
   }
 
@@ -143,6 +162,15 @@ async function requestHandler(
   }
 
   const token = extractToken(req, url);
+
+  // No credentials → 401 with WWW-Authenticate. This is what triggers the
+  // OAuth flow in Claude/ChatGPT/Gemini custom connectors: the client sees
+  // the challenge, fetches our discovery metadata, and opens /authorize.
+  if (!token) {
+    res.setHeader("WWW-Authenticate", WWW_AUTHENTICATE);
+    sendJson(res, 401, jsonRpcError(-32001, MISSING_TOKEN_MESSAGE));
+    return;
+  }
 
   // Rate limit BEFORE dispatch. Scope per token (hashed inside the limiter);
   // fall back to client IP for unauthenticated requests.
@@ -177,14 +205,16 @@ const httpServer = createServer((req, res) => {
 
 httpServer.listen(PORT, () => {
   console.error(
-    `DragApp MCP Server v${VERSION} (HTTP) listening on :${PORT} — MCP at ${MCP_PATH} and / , health at /health`,
+    `DragApp MCP Server v${VERSION} (HTTP) listening on :${PORT} — MCP at ${MCP_PATH} and /, OAuth at ${MCP_PATH}/{authorize,token,register} + well-known discovery, health at /health`,
   );
 });
 
 function shutdown(signal: string): void {
   console.error(`[mcp] ${signal} received — shutting down`);
   httpServer.close(() => {
-    void rateLimiter.close().finally(() => process.exit(0));
+    void Promise.allSettled([rateLimiter.close(), oauth.close()]).finally(() =>
+      process.exit(0),
+    );
   });
   // Don't hang forever if connections stall.
   setTimeout(() => process.exit(0), 5000).unref();

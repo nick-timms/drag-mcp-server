@@ -20,6 +20,8 @@ module.exports = {
         NODE_ENV: "production",
         MCP_PORT: 3001,
         MCP_PATH: "/mcp",
+        MCP_PUBLIC_URL: "https://app.dragapp.com/mcp",
+        // MCP_OAUTH_SECRET: "...",  // REQUIRED: `openssl rand -hex 32`, same on all instances
         // DRAG_API_BASE: "https://app.dragapp.com",  // or an internal VPC address
         // REDIS_HOST: "...",
         // REDIS_PORT: 6379,

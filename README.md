@@ -4,11 +4,29 @@ An [MCP](https://modelcontextprotocol.io) server for [DragApp](https://dragapp.c
 
 ## Setup
 
-### 1. Get your API key
+### Option A — Remote server (no install)
+
+Add DragApp as a **custom connector** using this URL:
+
+```
+https://app.dragapp.com/mcp
+```
+
+- **Claude** — Settings → Connectors → Add custom connector → paste the URL
+- **ChatGPT** — Settings → Connectors → Add → paste the URL
+- **Gemini** — add it as a remote MCP server with the same URL
+
+A DragApp page opens asking for your API key
+([DragApp](https://app.dragapp.com) → Settings → Integrations) — paste it once
+and you're connected. Nothing to install.
+
+### Option B — Local install (npm)
+
+#### 1. Get your API key
 
 Go to [DragApp](https://app.dragapp.com) → Settings → Integrations → copy your API key.
 
-### 2. Connect to your AI tool
+#### 2. Connect to your AI tool
 
 **Claude Desktop** — add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
