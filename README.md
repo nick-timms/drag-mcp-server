@@ -4,9 +4,9 @@ An [MCP](https://modelcontextprotocol.io) server for [DragApp](https://dragapp.c
 
 ## Setup
 
-### Option A — Remote server (no install)
+### Fastest: connect from your AI client (hosted)
 
-Add DragApp as a **custom connector** using this URL:
+Add this URL as a custom connector:
 
 ```
 https://app.dragapp.com/mcp
@@ -16,11 +16,14 @@ https://app.dragapp.com/mcp
 - **ChatGPT** — Settings → Connectors → Add → paste the URL
 - **Gemini** — add it as a remote MCP server with the same URL
 
-A DragApp page opens asking for your API key
-([DragApp](https://app.dragapp.com) → Settings → Integrations) — paste it once
-and you're connected. Nothing to install.
+When you connect, a Drag page opens and asks for your API key once
+([DragApp](https://app.dragapp.com) → Settings → Integrations). The key is
+verified and handed to your client as its access token; the service stores
+nothing, and the connect flow never puts your key in a URL. Works in any
+client that supports remote MCP connectors (OAuth 2.1 + PKCE, dynamic client
+registration). Nothing to install.
 
-### Option B — Local install (npm)
+### Local (config-file clients: Cursor, Windsurf, Claude Code)
 
 #### 1. Get your API key
 

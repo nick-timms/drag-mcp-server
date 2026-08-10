@@ -4,6 +4,8 @@ import { DragApiError } from "../api/client.js";
 export const analyticsTools = [
   {
     name: "get_response_times",
+    title: "Get response times",
+    annotations: { title: "Get response times", readOnlyHint: true },
     description:
       "Get first response time metrics for a board. Shows how quickly the team responds to new emails. Useful for SLA monitoring and performance reviews.",
     inputSchema: {
@@ -27,6 +29,8 @@ export const analyticsTools = [
   },
   {
     name: "get_avg_response_time",
+    title: "Get average response time",
+    annotations: { title: "Get average response time", readOnlyHint: true },
     description:
       "Get average response time across all replies on a board for a given period. Complements get_response_times which shows first response only.",
     inputSchema: {
@@ -50,6 +54,8 @@ export const analyticsTools = [
   },
   {
     name: "get_daily_activity",
+    title: "Get daily activity",
+    annotations: { title: "Get daily activity", readOnlyHint: true },
     description:
       "Get daily email activity counts for a board over a time period. Returns per-day counts useful for volume trends and workload analysis.",
     inputSchema: {
@@ -73,6 +79,8 @@ export const analyticsTools = [
   },
   {
     name: "get_closed_activity",
+    title: "Get closed-thread activity",
+    annotations: { title: "Get closed-thread activity", readOnlyHint: true },
     description:
       "Get the count of closed/resolved threads per day for a board. Useful for tracking team throughput and resolution rates.",
     inputSchema: {

@@ -30,6 +30,13 @@ export const VERSION = (
 
 export const SERVER_NAME = "dragapp";
 
+// Sent to clients at initialization (MCP `instructions`) — connected clients
+// feed it to the model as context in every session. Functional guidance only;
+// the two tips that matter most are also duplicated into the relevant tool
+// descriptions, since not every client injects instructions yet.
+export const SERVER_INSTRUCTIONS =
+  "DragApp is a shared inbox for Gmail teams: shared addresses like support@ become boards the whole team works together, with assignment, labels, WhatsApp, a knowledge base, and response-time analytics. This server exposes 47 tools across 12 categories with full read and write. Tips: call list_boards first to discover board IDs; thread and card tools take IDs from list or search results; write tools (replies, sends, moves) act on the user's real inbox, so confirm with the user before sending when intent is unclear. Docs: https://www.dragapp.com/docs/mcp/ Setup guide: https://www.dragapp.com/blog/connect-shared-inbox-to-claude-mcp/";
+
 // The combined tool list — all 47 tools across 12 categories. Both the stdio
 // entry point (src/index.ts) and the HTTP entry point (src/http.ts) expose
 // exactly this list; there is a single source of truth.
@@ -134,8 +141,18 @@ export function createMcpServer(opts: McpServerOptions): Server {
       capabilities: {
         tools: {},
       },
+      instructions: SERVER_INSTRUCTIONS,
     },
   );
+
+  // Adoption metric: which client (Claude, Cursor, ChatGPT, …) connected.
+  // Name + version only — no request content, no user identity.
+  server.oninitialized = () => {
+    const client = server.getClientVersion();
+    if (client) {
+      console.error(`[mcp] client connected: ${client.name}@${client.version}`);
+    }
+  };
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return { tools: ALL_TOOLS };

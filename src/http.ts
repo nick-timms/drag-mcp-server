@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { createMcpServer, VERSION } from "./server.js";
+import { ALL_TOOLS, createMcpServer, SERVER_NAME, VERSION } from "./server.js";
 import { createRateLimiter } from "./rateLimit.js";
-import { createOAuthRouter, WWW_AUTHENTICATE } from "./oauth.js";
+import { createOAuthRouter, DRAG_LOGO, WWW_AUTHENTICATE } from "./oauth.js";
 
 // HTTP entry point for the hosted remote endpoint (app.dragapp.com/mcp).
 // Additive to the stdio entry point (src/index.ts) — same 47 tools, same API
@@ -18,7 +18,46 @@ const PORT = Number(process.env.MCP_PORT) || 3001;
 const MCP_PATH = process.env.MCP_PATH || "/mcp";
 
 const MISSING_TOKEN_MESSAGE =
-  "Authentication required. Your AI client can connect via OAuth (a DragApp connect page will open), or send your DragApp API key in the Authorization header (raw token or 'Bearer <token>') or as a ?key= query parameter on the connector URL. Get your key from DragApp → Settings → Integrations.";
+  "Authentication required. Your AI client can connect via OAuth (a DragApp connect page will open), or send your DragApp API key in the Authorization header (raw token or 'Bearer <token>'). Get your key from DragApp → Settings → Integrations. Setup guide: https://www.dragapp.com/blog/connect-shared-inbox-to-claude-mcp/";
+
+// Served on GET /mcp from a browser. Kept self-contained (inline styles, no
+// assets) so it renders anywhere.
+const HINT_PAGE = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Drag MCP Server</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         background: #f4f6fb; color: #1a2233; display: flex; min-height: 100vh;
+         align-items: center; justify-content: center; padding: 24px; }
+  .card { background: #fff; border-radius: 14px; box-shadow: 0 8px 30px rgba(20,30,60,.08);
+          max-width: 460px; width: 100%; padding: 36px; }
+  .brand { display: block; height: 34px; width: auto; margin-bottom: 20px; }
+  h1 { font-size: 19px; margin-bottom: 10px; }
+  p  { font-size: 14px; line-height: 1.6; color: #4b566b; margin-bottom: 14px; }
+  code { background: #eef2f9; border-radius: 6px; padding: 2px 6px; font-size: 13px; }
+  a  { color: #4395f8; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <img class="brand" src="${DRAG_LOGO}" alt="Drag">
+    <h1>Drag MCP Server</h1>
+    <p>This endpoint connects AI assistants to your DragApp shared inbox —
+       emails, WhatsApp, boards, contacts, and analytics, with full read and
+       write.</p>
+    <p>Add <code>https://app.dragapp.com/mcp</code> as a custom connector in
+       Claude, ChatGPT, Cursor, or any client that supports remote MCP —
+       you&#39;ll be asked to authorize with your DragApp account.</p>
+    <p><a href="https://www.dragapp.com/docs/mcp/">Documentation</a> ·
+       <a href="https://www.dragapp.com/blog/connect-shared-inbox-to-claude-mcp/">Setup guide</a></p>
+  </main>
+</body>
+</html>`;
 
 const rateLimiter = createRateLimiter();
 const oauth = createOAuthRouter({
@@ -50,21 +89,18 @@ function jsonRpcError(code: number, message: string) {
   return { jsonrpc: "2.0" as const, error: { code, message }, id: null };
 }
 
-/** Extract the DragApp token, preferring the Authorization header (raw token
- *  or "Bearer <token>") and falling back to a ?key= query parameter. The query
- *  fallback exists because some connector UIs (e.g. Claude.ai's custom
- *  connector) cannot attach an Authorization header, so the key must ride on
- *  the URL instead. Never logged. */
-function extractToken(req: IncomingMessage, url: URL): string | undefined {
+/** Extract the DragApp token from the Authorization header (raw token or
+ *  "Bearer <token>"). The header is the ONLY accepted credential location —
+ *  keys in URLs end up in edge access logs, so query-parameter auth is not
+ *  supported; header-less connector UIs go through OAuth instead. Never
+ *  logged. */
+function extractToken(req: IncomingMessage): string | undefined {
   const header = req.headers["authorization"];
-  if (typeof header === "string" && header.trim() !== "") {
-    const trimmed = header.trim();
-    const bearer = /^Bearer\s+(.+)$/i.exec(trimmed);
-    const fromHeader = (bearer ? bearer[1] : trimmed).trim();
-    if (fromHeader) return fromHeader;
-  }
-  const fromQuery = url.searchParams.get("key");
-  return fromQuery?.trim() || undefined;
+  if (typeof header !== "string" || header.trim() === "") return undefined;
+  const trimmed = header.trim();
+  const bearer = /^Bearer\s+(.+)$/i.exec(trimmed);
+  const token = (bearer ? bearer[1] : trimmed).trim();
+  return token || undefined;
 }
 
 /** Client IP for the unauthenticated rate-limit fallback. Behind NGINX the
@@ -97,6 +133,15 @@ async function handleMcpPost(
   });
 
   res.on("close", () => {
+    // Adoption metric: which client (Claude, Cursor, ChatGPT, …) connected.
+    // getClientVersion() is only populated by an initialize request, so this
+    // logs exactly once per connect — name + version, no content, no PII.
+    // (The shared core's oninitialized hook can't see clientInfo here:
+    // stateless mode gives the `initialized` notification a fresh Server.)
+    const client = server.getClientVersion();
+    if (client) {
+      console.error(`[mcp] client connected: ${client.name}@${client.version}`);
+    }
     // Tear down per-request resources once the response is done/aborted.
     void transport.close();
     void server.close();
@@ -130,6 +175,20 @@ async function requestHandler(
     return;
   }
 
+  // Static server card — a capability descriptor read by directory crawlers
+  // (Smithery et al.). Built from the live tool list so it can never drift.
+  // Matched by suffix so it works with and without the /mcp prefix.
+  if (method === "GET" && pathname.endsWith("/.well-known/mcp/server-card.json")) {
+    sendJson(res, 200, {
+      serverInfo: { name: SERVER_NAME, version: VERSION },
+      authentication: { required: true, schemes: ["oauth2"] },
+      tools: ALL_TOOLS,
+      resources: [],
+      prompts: [],
+    });
+    return;
+  }
+
   // OAuth: discovery metadata, /register, /authorize, /token.
   if (await oauth.handle(req, res, url, method)) {
     return;
@@ -140,13 +199,12 @@ async function requestHandler(
     return;
   }
 
-  // A person pasting the connector URL into a browser gets a hint page
-  // instead of a bare JSON error.
+  // A person (or a directory reviewer) pasting the connector URL into a
+  // browser gets a branded hint page instead of a bare JSON error. noindex:
+  // the app subdomain must never compete with www.dragapp.com in search.
   if (method === "GET" && (req.headers.accept || "").includes("text/html")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(
-      `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>DragApp MCP Server</title></head><body style="font-family:sans-serif;max-width:600px;margin:60px auto;line-height:1.6"><h1>DragApp MCP Server</h1><p>This is an MCP endpoint for AI clients, not a web page. Add it as a custom connector in Claude, ChatGPT, or Gemini using this URL — you'll be asked to authorize with your DragApp account.</p></body></html>`,
-    );
+    res.end(HINT_PAGE);
     return;
   }
 
@@ -161,7 +219,7 @@ async function requestHandler(
     return;
   }
 
-  const token = extractToken(req, url);
+  const token = extractToken(req);
 
   // No credentials → 401 with WWW-Authenticate. This is what triggers the
   // OAuth flow in Claude/ChatGPT/Gemini custom connectors: the client sees

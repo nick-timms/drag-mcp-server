@@ -45,7 +45,9 @@ Two entry points share one codebase:
    header — exactly the same per-request auth path as before.
 
 Power users can skip OAuth entirely: an `Authorization` header (raw or
-`Bearer`) or `?key=` query parameter still authenticates directly.
+`Bearer`) still authenticates directly. The header is the only accepted
+credential location — query-parameter auth is not supported, so keys can never
+end up in edge access logs.
 
 Everything stays **stateless**: the OAuth client ID is a signed blob, the
 authorization code is an encrypted 5-minute blob, and the access token IS the

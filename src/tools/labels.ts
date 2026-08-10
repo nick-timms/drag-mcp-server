@@ -5,6 +5,8 @@ import { shapeLabel } from "../api/shaping.js";
 export const labelTools = [
   {
     name: "list_labels",
+    title: "List labels",
+    annotations: { title: "List labels", readOnlyHint: true },
     description:
       "List all shared labels on a board. Labels are coloured markers used to categorise and filter email threads across the team.",
     inputSchema: {
@@ -20,6 +22,8 @@ export const labelTools = [
   },
   {
     name: "add_label_to_thread",
+    title: "Add a label to a thread",
+    annotations: { title: "Add a label to a thread", destructiveHint: false },
     description:
       "Add a shared label to an email thread (or task). Use list_labels first to find available label IDs for the board.",
     inputSchema: {
@@ -43,6 +47,8 @@ export const labelTools = [
   },
   {
     name: "remove_label_from_thread",
+    title: "Remove a label from a thread",
+    annotations: { title: "Remove a label from a thread", destructiveHint: false },
     description:
       "Remove a shared label from an email thread (or task).",
     inputSchema: {
@@ -66,6 +72,8 @@ export const labelTools = [
   },
   {
     name: "toggle_labels",
+    title: "Toggle labels",
+    annotations: { title: "Toggle labels", destructiveHint: false },
     description:
       "Add some labels and/or remove others from a thread in one call. The backend toggle endpoint is one-label-at-a-time, so this iterates internally.",
     inputSchema: {

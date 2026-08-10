@@ -5,6 +5,8 @@ import { shapeWhatsappTemplate } from "../api/shaping.js";
 export const whatsappTools = [
   {
     name: "get_whatsapp_conversation",
+    title: "Read a WhatsApp conversation",
+    annotations: { title: "Read a WhatsApp conversation", readOnlyHint: true },
     description:
       "Get the full message history of a WhatsApp conversation (card) on a WhatsApp board. Returns the chat messages in order. Use the cardId returned by list_threads / search_threads on a WhatsApp board (the `cardId` field).",
     inputSchema: {
@@ -21,6 +23,8 @@ export const whatsappTools = [
   },
   {
     name: "list_whatsapp_templates",
+    title: "List WhatsApp templates",
+    annotations: { title: "List WhatsApp templates", readOnlyHint: true },
     description:
       "List the pre-approved WhatsApp message templates available on a WhatsApp board. Returns each template's name, language, status, category, body text, and how many {{n}} variables it expects. Only APPROVED templates can be sent.",
     inputSchema: {
@@ -37,8 +41,10 @@ export const whatsappTools = [
   },
   {
     name: "send_whatsapp_message",
+    title: "Send a WhatsApp message",
+    annotations: { title: "Send a WhatsApp message", destructiveHint: true },
     description:
-      "Send a free-text WhatsApp message into an existing conversation. Note: WhatsApp only allows free-text messages inside the 24-hour customer service window; outside it, use send_whatsapp_template instead.",
+      "Send a free-text WhatsApp message into an existing conversation. Note: WhatsApp only allows free-text messages inside the 24-hour customer service window; outside it, use send_whatsapp_template instead. Confirm with the user before sending when intent is unclear.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -63,8 +69,10 @@ export const whatsappTools = [
   },
   {
     name: "send_whatsapp_template",
+    title: "Send a WhatsApp template",
+    annotations: { title: "Send a WhatsApp template", destructiveHint: true },
     description:
-      "Send a pre-approved WhatsApp template message into a conversation. Use this to reach a contact outside the 24-hour window. Call list_whatsapp_templates first to get the exact template name and language, and to see how many {{n}} variables it needs.",
+      "Send a pre-approved WhatsApp template message into a conversation. Use this to reach a contact outside the 24-hour window. Call list_whatsapp_templates first to get the exact template name and language, and to see how many {{n}} variables it needs. Confirm with the user before sending when intent is unclear.",
     inputSchema: {
       type: "object" as const,
       properties: {

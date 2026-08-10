@@ -5,6 +5,8 @@ import { shapeContact, shapeContactConversation } from "../api/shaping.js";
 export const contactTools = [
   {
     name: "search_contacts",
+    title: "Search contacts",
+    annotations: { title: "Search contacts", readOnlyHint: true },
     description:
       "Search for contacts by name or email. The search text must not be empty. Returns matching contact records with name, email, phone, and domain.",
     inputSchema: {
@@ -20,6 +22,8 @@ export const contactTools = [
   },
   {
     name: "get_contact_conversations",
+    title: "Get a contact's conversations",
+    annotations: { title: "Get a contact's conversations", readOnlyHint: true },
     description:
       "Get all email conversations involving a specific contact. Returns thread subjects, dates, and preview text. Use search_contacts first to find the contact ID.",
     inputSchema: {
@@ -35,6 +39,8 @@ export const contactTools = [
   },
   {
     name: "create_contact",
+    title: "Create a contact",
+    annotations: { title: "Create a contact", destructiveHint: false },
     description:
       "Create a new contact record in DragApp with name, email, and optional phone and note.",
     inputSchema: {
