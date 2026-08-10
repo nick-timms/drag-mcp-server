@@ -5,8 +5,10 @@ import { shapeV1Board, shapeBoard, shapeV1Column } from "../api/shaping.js";
 export const boardTools = [
   {
     name: "list_boards",
+    title: "List boards",
+    annotations: { title: "List boards", readOnlyHint: true },
     description:
-      "List all DragApp boards the user has access to. Returns board name, owner, unread count, and contributor info.",
+      "List all DragApp boards the user has access to. Call this first to discover board IDs. Returns board name, owner, unread count, and contributor info.",
     inputSchema: {
       type: "object" as const,
       properties: {},
@@ -15,6 +17,8 @@ export const boardTools = [
   },
   {
     name: "get_board",
+    title: "Get board details",
+    annotations: { title: "Get board details", readOnlyHint: true },
     description:
       "Get details of a specific DragApp board by ID. Returns board name, owner, and members.",
     inputSchema: {
@@ -30,6 +34,8 @@ export const boardTools = [
   },
   {
     name: "list_columns",
+    title: "List columns",
+    annotations: { title: "List columns", readOnlyHint: true },
     description:
       "List all columns (stages) on a DragApp board. Columns represent workflow stages like To Do, In Progress, Done. Returns label-style IDs (e.g. \"Label_1\") used by list_threads, filter_threads, and move_thread.",
     inputSchema: {
@@ -45,6 +51,8 @@ export const boardTools = [
   },
   {
     name: "list_board_members",
+    title: "List board members",
+    annotations: { title: "List board members", readOnlyHint: true },
     description:
       "List all boards with their columns and member info. Returns the main board and secondary boards with columns for each.",
     inputSchema: {
@@ -55,6 +63,8 @@ export const boardTools = [
   },
   {
     name: "list_teams",
+    title: "List teams",
+    annotations: { title: "List teams", readOnlyHint: true },
     description:
       "List all teams the user belongs to. Returns team IDs needed by knowledge base tools (list_articles, get_article, create_article, update_article).",
     inputSchema: {

@@ -5,6 +5,8 @@ import { shapeComment } from "../api/shaping.js";
 export const commentTools = [
   {
     name: "add_comment",
+    title: "Add a comment",
+    annotations: { title: "Add a comment", destructiveHint: false },
     description:
       "Add a comment to a card. Comments are internal team messages attached to cards, visible to all board members.",
     inputSchema: {
@@ -18,6 +20,8 @@ export const commentTools = [
   },
   {
     name: "get_comment",
+    title: "Read a comment",
+    annotations: { title: "Read a comment", readOnlyHint: true },
     description: "Retrieve a specific comment by its ID.",
     inputSchema: {
       type: "object" as const,

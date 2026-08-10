@@ -5,6 +5,8 @@ import { shapeAutomation } from "../api/shaping.js";
 export const automationTools = [
   {
     name: "list_automations",
+    title: "List automations",
+    annotations: { title: "List automations", readOnlyHint: true },
     description:
       "List all automations configured on a board. Shows automation name, trigger type, actions, and whether each is active. Returns an empty array if no automations exist.",
     inputSchema: {
@@ -20,6 +22,8 @@ export const automationTools = [
   },
   {
     name: "toggle_automation",
+    title: "Toggle an automation",
+    annotations: { title: "Toggle an automation", destructiveHint: false },
     description:
       "Activate or deactivate a board automation. Pass active=true to enable or active=false to disable.",
     inputSchema: {
@@ -43,6 +47,8 @@ export const automationTools = [
   },
   {
     name: "toggle_ai_drafts",
+    title: "Toggle AI drafts",
+    annotations: { title: "Toggle AI drafts", destructiveHint: false },
     description:
       "Enable or disable AI-generated draft replies for a board. When enabling, you must choose a category: 'automatic' (drafts created without prompting) or 'manual' (drafts created on demand).",
     inputSchema: {

@@ -6,6 +6,8 @@ import { stripHtmlToPlain } from "../utils/encoding.js";
 export const knowledgeTools = [
   {
     name: "list_articles",
+    title: "List help center articles",
+    annotations: { title: "List help center articles", readOnlyHint: true },
     description:
       "List all knowledge base articles for a team. Returns article titles, categories, and publication status. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -21,6 +23,8 @@ export const knowledgeTools = [
   },
   {
     name: "get_article",
+    title: "Read an article",
+    annotations: { title: "Read an article", readOnlyHint: true },
     description:
       "Get the full content of a knowledge base article by ID, including title, body, category, and publication status. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -40,6 +44,8 @@ export const knowledgeTools = [
   },
   {
     name: "create_article",
+    title: "Create an article",
+    annotations: { title: "Create an article", destructiveHint: false },
     description:
       "Create a new knowledge base article. Articles can be categorised and published for team or public access. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -67,6 +73,8 @@ export const knowledgeTools = [
   },
   {
     name: "update_article",
+    title: "Update an article",
+    annotations: { title: "Update an article", destructiveHint: false },
     description:
       "Update an existing knowledge base article's title, body, or category. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -98,6 +106,8 @@ export const knowledgeTools = [
   },
   {
     name: "search_knowledge",
+    title: "Search the knowledge base",
+    annotations: { title: "Search the knowledge base", readOnlyHint: true },
     description:
       "Search a Help Center knowledge base by keyword. teamId, slug, and query are all optional except query — with no teamId or slug, the first team that has a configured Help Center slug is used.",
     inputSchema: {

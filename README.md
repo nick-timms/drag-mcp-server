@@ -4,11 +4,32 @@ An [MCP](https://modelcontextprotocol.io) server for [DragApp](https://dragapp.c
 
 ## Setup
 
-### 1. Get your API key
+### Fastest: connect from your AI client (hosted)
+
+Add this URL as a custom connector:
+
+```
+https://app.dragapp.com/mcp
+```
+
+- **Claude** — Settings → Connectors → Add custom connector → paste the URL
+- **ChatGPT** — Settings → Connectors → Add → paste the URL
+- **Gemini** — add it as a remote MCP server with the same URL
+
+When you connect, a Drag page opens and asks for your API key once
+([DragApp](https://app.dragapp.com) → Settings → Integrations). The key is
+verified and handed to your client as its access token; the service stores
+nothing, and the connect flow never puts your key in a URL. Works in any
+client that supports remote MCP connectors (OAuth 2.1 + PKCE, dynamic client
+registration). Nothing to install.
+
+### Local (config-file clients: Cursor, Windsurf, Claude Code)
+
+#### 1. Get your API key
 
 Go to [DragApp](https://app.dragapp.com) → Settings → Integrations → copy your API key.
 
-### 2. Connect to your AI tool
+#### 2. Connect to your AI tool
 
 **Claude Desktop** — add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 

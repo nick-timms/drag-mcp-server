@@ -22,3 +22,6 @@ dist/
 
 # Private list of sensitive terms the tarball guard enforces (never published)
 .forbidden-terms
+
+# Internal working docs — never publish
+DragApp-MCP-v2-Build-Spec.md
