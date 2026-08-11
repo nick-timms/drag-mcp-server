@@ -42,7 +42,7 @@ export const contactTools = [
     title: "Create a contact",
     annotations: { title: "Create a contact", destructiveHint: false },
     description:
-      "Create a new contact record in DragApp with name, email, and optional phone and note.",
+      "Create a new contact record in DragApp with name, email, and optional phone and note. The contact is filed against a board and becomes visible to that board's members.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -54,6 +54,11 @@ export const contactTools = [
           type: "string",
           description: "Contact email address",
         },
+        boardId: {
+          type: "number",
+          description:
+            "Board to associate the contact with — contacts are only visible to members of boards they are filed on. Use list_boards to find board IDs.",
+        },
         phone: {
           type: "string",
           description: "Phone number",
@@ -63,7 +68,7 @@ export const contactTools = [
           description: "Note about the contact",
         },
       },
-      required: ["name", "email"],
+      required: ["name", "email", "boardId"],
     },
   },
 ];
@@ -108,9 +113,21 @@ export async function handleContactTool(
       // Backend Create reads `req.body.data` and expects a non-empty array
       // of contact objects (it's a batch endpoint). A single contact must be
       // wrapped — sending the flat object returns "data should be a non-empty array".
+      //
+      // BoardId is what makes the contact visible afterwards: contact list
+      // and search only return contacts filed on a board the caller belongs
+      // to, so a create without BoardId reports success but the contact
+      // never appears in any later search.
+      //
+      // The endpoint also re-derives the stored name from the Email field,
+      // discarding the separate Name for plain addresses — send the
+      // "Name <email>" form so the caller's name survives.
+      const name = (args.name as string).replace(/[<>]/g, "").trim();
+      const email = args.email as string;
       const contact: Record<string, unknown> = {
-        Name: args.name,
-        Email: args.email,
+        Name: name,
+        Email: name ? `${name} <${email}>` : email,
+        BoardId: args.boardId,
       };
       if (args.phone) contact.Phone = args.phone;
       if (args.note) contact.Note = args.note;

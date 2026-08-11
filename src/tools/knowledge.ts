@@ -47,7 +47,7 @@ export const knowledgeTools = [
     title: "Create an article",
     annotations: { title: "Create an article", destructiveHint: false },
     description:
-      "Create a new knowledge base article. Articles can be categorised and published for team or public access. Use list_teams to find your team ID first.",
+      "Create a new knowledge base article as a draft, filed under the category you specify. Publishing is done in the Drag web app. Use list_teams to find your team ID first.",
     inputSchema: {
       type: "object" as const,
       properties: {

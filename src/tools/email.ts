@@ -1,6 +1,6 @@
 import type { DragClient } from "../api/client.js";
 import type { FetchEmailDataResponse, DetailMessageResponse, SendEmailResponse, ThreadListItem } from "../api/types.js";
-import { shapeBoardItem, shapeMessageDetail, shapeSendEmailResponse } from "../api/shaping.js";
+import { shapeBoardItem, shapeSearchResultItem, shapeMessageDetail, shapeSendEmailResponse } from "../api/shaping.js";
 
 export const emailTools = [
   {
@@ -353,7 +353,7 @@ export async function handleEmailTool(
         },
       );
       return {
-        threads: extractThreads(data).map(shapeBoardItem),
+        threads: extractThreads(data).map(shapeSearchResultItem),
         isEmail: data.isEmail,
       };
     }

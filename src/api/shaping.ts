@@ -166,6 +166,16 @@ export function shapeThreadCompact(thread: ThreadListItem) {
   };
 }
 
+/**
+ * Search results reuse the thread shape minus `labels`: the search index
+ * never populates Gmail labels, so on this path the field is always an
+ * empty array and would read as "this thread has no labels".
+ */
+export function shapeThreadSearchResult(thread: ThreadListItem) {
+  const { labels: _labels, ...shaped } = shapeThreadCompact(thread);
+  return shaped;
+}
+
 export function shapeMessageDetail(msg: MessageDetail) {
   const replyAction = msg.actions?.find((a) => a.action === "reply");
   const firstRecipient = replyAction?.recipients?.[0];
@@ -228,8 +238,8 @@ export function shapeWhatsappCardCompact(item: Record<string, unknown>) {
   const cardIdRaw = pick("whatsappCardId", "WhatsappCardId", "id", "Id");
   const cardId = cardIdRaw != null ? String(cardIdRaw) : null;
 
-  // The entity ID is "<id>-<phoneNumber>"; the phone is what /send-message's
-  // `to` field expects (mirrors the extension's entityId.split("-")[1]).
+  // The entity ID is "wamid-<phoneNumber>-<userId>-<boardId>"; the phone is
+  // what /send-message's `to` field expects (second dash-separated segment).
   const phone = cardId ? (cardId.split("-")[1] ?? null) : null;
 
   const dueRaw = pick("dueDate", "DueDate");
@@ -302,6 +312,18 @@ export function shapeTaskCardCompact(item: Record<string, unknown>) {
   const cardIdRaw = pick("taskId", "TaskId", "DragTaskId", "id", "Id");
   const cardId = cardIdRaw != null ? String(cardIdRaw) : null;
 
+  // Task titles are stored base64-encoded. Board listings return a
+  // pre-decoded `dragTaskName` alongside; the search path returns only the
+  // encoded `taskName`, and `title` (a separate per-card record) is only
+  // present when a note or comment was ever attached. Prefer the decoded
+  // form, then the card title, then decode the raw name ourselves.
+  const rawTaskName = pick("taskName", "TaskName");
+  const title =
+    pick("dragTaskName", "DragTaskName") ??
+    pick("title", "Title") ??
+    decodeBase64Text(rawTaskName) ??
+    rawTaskName;
+
   let assignees: string[] = [];
   const assigneesRaw = pick("assignees", "Assignees");
   if (typeof assigneesRaw === "string") {
@@ -329,7 +351,7 @@ export function shapeTaskCardCompact(item: Record<string, unknown>) {
   return {
     cardId,
     entityType: "1" as const, // request/tool convention: task = "1"
-    title: pick("title", "Title", "TaskName"),
+    title,
     isUnread: readStatus === "unread-mail" || readStatus === 0 || readStatus === false,
     status: pick("cardStatus", "CardStatus", "status", "Status"),
     columnId: pick("columnId", "ColumnId"),
@@ -362,6 +384,63 @@ export function shapeBoardItem(item: unknown) {
     return shapeTaskCardCompact(item as Record<string, unknown>);
   }
   return shapeThreadCompact(item as ThreadListItem);
+}
+
+/** shapeBoardItem for search responses — threads drop the dead `labels` field. */
+export function shapeSearchResultItem(item: unknown) {
+  if (isWhatsappCardItem(item)) {
+    return shapeWhatsappCardCompact(item as Record<string, unknown>);
+  }
+  if (isTaskCardItem(item)) {
+    return shapeTaskCardCompact(item as Record<string, unknown>);
+  }
+  return shapeThreadSearchResult(item as ThreadListItem);
+}
+
+// ─── WhatsApp conversation messages (v2) ────────────────────────────
+// The conversation endpoint returns raw ~850-byte rows with 21 columns,
+// most of which are never populated (MsgBody, Attachments, UpdatedAt) —
+// the message text itself only lives inside the stringified platform
+// payload in `Message`. Extract the useful subset.
+
+export function shapeWhatsappMessage(row: Record<string, unknown>) {
+  let payload: Record<string, unknown> | null = null;
+  const rawMessage = row.Message ?? row.message;
+  if (typeof rawMessage === "string") {
+    try {
+      payload = JSON.parse(rawMessage);
+    } catch {
+      // ignore malformed payloads
+    }
+  } else if (rawMessage && typeof rawMessage === "object") {
+    payload = rawMessage as Record<string, unknown>;
+  }
+
+  const textObj = payload?.text as Record<string, unknown> | undefined;
+  const text =
+    (typeof textObj?.body === "string" ? textObj.body : null) ??
+    (typeof row.MsgBody === "string" ? row.MsgBody : null);
+
+  // MsgDate is an epoch-milliseconds value stored as a string.
+  let timestamp: string | null = null;
+  const msgDate = row.MsgDate ?? row.msgDate;
+  if (msgDate != null) {
+    const n = Number(msgDate);
+    timestamp =
+      Number.isFinite(n) && n > 0 ? new Date(n).toISOString() : String(msgDate);
+  } else if (row.CreatedAt != null) {
+    timestamp = String(row.CreatedAt);
+  }
+
+  const isSent = row.IsSent ?? row.isSent;
+  return {
+    direction: isSent === 1 || isSent === true ? ("outbound" as const) : ("inbound" as const),
+    from: row.MsgFrom ?? null,
+    text,
+    type: row.MsgType ?? null,
+    timestamp,
+    sentBy: row.SenderEmail ?? row.SenderName ?? null,
+  };
 }
 
 export function shapeWhatsappTemplate(template: WhatsAppTemplate) {
@@ -542,4 +621,20 @@ function truncate(text: string | null | undefined, maxLength: number): string {
 function stripHtml(html: string | null | undefined): string {
   if (!html) return "";
   return html.replace(/<[^>]*>/g, "").trim();
+}
+
+/**
+ * Decode a base64-encoded text value, returning null unless the input is
+ * genuine base64 that decodes to clean text. Ordinary words can be valid
+ * base64 by accident ("Test"), so reject decodes containing control or
+ * replacement characters rather than trusting every syntactic match.
+ */
+function decodeBase64Text(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0 || value.length % 4 !== 0) {
+    return null;
+  }
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(value)) return null;
+  const decoded = Buffer.from(value, "base64").toString("utf-8");
+  if (/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFD]/u.test(decoded)) return null;
+  return decoded;
 }

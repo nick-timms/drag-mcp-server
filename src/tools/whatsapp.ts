@@ -1,6 +1,6 @@
 import type { DragClient } from "../api/client.js";
 import type { WhatsAppTemplate, WhatsAppTemplatesResponse } from "../api/types.js";
-import { shapeWhatsappTemplate } from "../api/shaping.js";
+import { shapeWhatsappTemplate, shapeWhatsappMessage } from "../api/shaping.js";
 
 export const whatsappTools = [
   {
@@ -8,14 +8,18 @@ export const whatsappTools = [
     title: "Read a WhatsApp conversation",
     annotations: { title: "Read a WhatsApp conversation", readOnlyHint: true },
     description:
-      "Get the full message history of a WhatsApp conversation (card) on a WhatsApp board. Returns the chat messages in order. Use the cardId returned by list_threads / search_threads on a WhatsApp board (the `cardId` field).",
+      "Get the message history of a WhatsApp conversation (card) on a WhatsApp board. Returns messages oldest-first with direction, text, sender, and timestamp, keeping the most recent `limit` messages. Use the cardId returned by list_threads / search_threads on a WhatsApp board (the `cardId` field).",
     inputSchema: {
       type: "object" as const,
       properties: {
         cardId: {
           type: "string",
           description:
-            "The WhatsApp card ID (whatsappCardId), formatted '<id>-<phoneNumber>'. Get it from list_threads or search_threads on a WhatsApp board.",
+            "The WhatsApp card ID (whatsappCardId), formatted 'wamid-<phoneNumber>-<userId>-<boardId>'. Get it from list_threads or search_threads on a WhatsApp board.",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum messages to return, keeping the most recent (default: 50)",
         },
       },
       required: ["cardId"],
@@ -44,7 +48,7 @@ export const whatsappTools = [
     title: "Send a WhatsApp message",
     annotations: { title: "Send a WhatsApp message", destructiveHint: true },
     description:
-      "Send a free-text WhatsApp message into an existing conversation. Note: WhatsApp only allows free-text messages inside the 24-hour customer service window; outside it, use send_whatsapp_template instead. Confirm with the user before sending when intent is unclear.",
+      "Send a free-text WhatsApp message into an existing conversation. Note: WhatsApp only allows free-text messages inside the 24-hour customer service window; outside it, use send_whatsapp_template instead. Requires an existing conversation card — starting a conversation with a number that has never messaged the business is not supported. Confirm with the user before sending when intent is unclear.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -72,7 +76,7 @@ export const whatsappTools = [
     title: "Send a WhatsApp template",
     annotations: { title: "Send a WhatsApp template", destructiveHint: true },
     description:
-      "Send a pre-approved WhatsApp template message into a conversation. Use this to reach a contact outside the 24-hour window. Call list_whatsapp_templates first to get the exact template name and language, and to see how many {{n}} variables it needs. Confirm with the user before sending when intent is unclear.",
+      "Send a pre-approved WhatsApp template message into a conversation. Use this to reach a contact outside the 24-hour window. Call list_whatsapp_templates first to get the exact template name and language, and to see how many {{n}} variables it needs. Requires an existing conversation card — starting a conversation with a number that has never messaged the business is not supported. Confirm with the user before sending when intent is unclear.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -157,10 +161,10 @@ async function fetchTemplates(
 
 /**
  * Resolve the three values /whatsapp/send-message needs from a card ID.
- * `to` is the phone number embedded in the entity ID ("<id>-<phone>"),
- * mirroring the extension's `entityId.split("-")[1]`. boardId/columnId are
- * taken from the args when present, else looked up via the detail-page
- * endpoint (entityType "3" = WhatsApp).
+ * `to` is the phone number embedded in the entity ID
+ * ("wamid-<phone>-<userId>-<boardId>"), mirroring the extension's
+ * `entityId.split("-")[1]`. boardId/columnId are taken from the args when
+ * present, else looked up via the detail-page endpoint (entityType "3").
  */
 async function resolveCard(
   client: DragClient,
@@ -170,7 +174,7 @@ async function resolveCard(
   const to = cardId.split("-")[1];
   if (!to) {
     throw new Error(
-      `cardId "${cardId}" is not a WhatsApp card ID — expected the "<id>-<phoneNumber>" format from list_threads.`,
+      `cardId "${cardId}" is not a WhatsApp card ID — expected the "wamid-<phoneNumber>-<userId>-<boardId>" format from list_threads.`,
     );
   }
 
@@ -207,10 +211,22 @@ export async function handleWhatsappTool(
 ): Promise<unknown> {
   switch (name) {
     case "get_whatsapp_conversation": {
-      // v2 wrapped response — client unwraps to the `data` payload.
-      return client.get("/v2/whatsapp/get-conversation", {
+      // v2 wrapped response — client unwraps to the `data` payload: raw
+      // per-message rows. Shape them (the text only lives inside a
+      // stringified platform payload) and keep the most recent `limit`.
+      const rows = await client.get<unknown[]>("/v2/whatsapp/get-conversation", {
         whatsappCardId: String(args.cardId),
       });
+      if (!Array.isArray(rows)) return rows;
+
+      const limit = (args.limit as number | undefined) ?? 50;
+      const messages = rows
+        .map((row) => shapeWhatsappMessage(row as Record<string, unknown>))
+        .sort((a, b) => (a.timestamp ?? "").localeCompare(b.timestamp ?? ""));
+      return {
+        totalMessages: messages.length,
+        messages: messages.slice(-limit),
+      };
     }
     case "list_whatsapp_templates": {
       const templates = await fetchTemplates(
