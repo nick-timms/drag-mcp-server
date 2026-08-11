@@ -139,13 +139,14 @@ export const cardTools = [
     name: "archive_card",
     title: "Archive a card",
     annotations: { title: "Archive a card", destructiveHint: true },
-    description: "Archive (delete) a card from a DragApp board.",
+    description:
+      "Archive a task card, which closes it rather than deleting it. The card remains retrievable and its status becomes CLOSED. Email threads cannot be archived with this tool.",
     inputSchema: {
       type: "object" as const,
       properties: {
         cardId: {
-          type: "string",
-          description: "The card ID to archive. Numeric task IDs and hex thread IDs both work.",
+          type: "number",
+          description: "The numeric task card ID to archive",
         },
       },
       required: ["cardId"],
@@ -156,7 +157,8 @@ export const cardTools = [
 /**
  * Task IDs are numeric with length < 15.
  * Email/thread IDs are hex strings of ~16 chars; task IDs are short integers.
- * WhatsApp card IDs are "<id>-<phoneNumber>" — the only ID form with a dash.
+ * WhatsApp card IDs are "wamid-<phone>-<userId>-<boardId>" — the only ID
+ * form with dashes.
  */
 function entityTypeFor(cardId: string | number): "0" | "1" | "3" {
   const s = String(cardId);
