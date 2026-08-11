@@ -1,6 +1,6 @@
 import type { DragClient } from "../api/client.js";
 import type { Article } from "../api/types.js";
-import { shapeArticle, shapeArticleCompact } from "../api/shaping.js";
+import { shapeArticle, shapeArticleCompact, shapeArticleSearchResult } from "../api/shaping.js";
 import { stripHtmlToPlain } from "../utils/encoding.js";
 
 export const knowledgeTools = [
@@ -239,7 +239,7 @@ export async function handleKnowledgeTool(
         `/v1.18/knowledge/public/${slug}/search`,
         { q: args.query as string },
       );
-      return results.map(shapeArticleCompact);
+      return results.map(shapeArticleSearchResult);
     }
     default:
       throw new Error(`Unknown knowledge tool: ${name}`);

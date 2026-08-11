@@ -51,8 +51,8 @@ export const boardTools = [
   },
   {
     name: "list_board_members",
-    title: "List board members",
-    annotations: { title: "List board members", readOnlyHint: true },
+    title: "List boards with columns and members",
+    annotations: { title: "List boards with columns and members", readOnlyHint: true },
     description:
       "List all boards with their columns and member info. Returns the main board and secondary boards with columns for each.",
     inputSchema: {

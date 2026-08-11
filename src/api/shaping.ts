@@ -62,9 +62,11 @@ export function shapeColumn(column: Column) {
 }
 
 // ─── Columns (v1.18) ────────────────────────────────────────────────
-// v1.18 column names use "Drag-N#ColumnName" format — strip the prefix
+// v1.18 column names embed an internal prefix — "Drag-N#ColumnName" or
+// "Dteamboard-N-N#ColumnName" — strip it. Deliberately narrower than
+// /^[^#]*#/ so a customer column named e.g. "Sprint #3" survives intact.
 
-const COLUMN_NAME_PREFIX = /^Drag-\d+#/;
+const COLUMN_NAME_PREFIX = /^D(rag|teamboard)-[\d-]+#/;
 
 export function shapeV1Column(column: V1Column) {
   return {
@@ -447,6 +449,67 @@ export function shapeArticleCompact(article: Article) {
     categoryName: article.category?.name ?? null,
     isPublished: article.status === "published",
     updatedAt: article.updatedAt,
+  };
+}
+
+// The public Help Center search endpoint returns neither `status` nor
+// `category`, so deriving isPublished/categoryName here would report every
+// hit as unpublished and uncategorised — everything a public search can
+// return is by definition published. Omit both fields instead.
+export function shapeArticleSearchResult(article: Article) {
+  return {
+    id: article.id,
+    title: article.title,
+    preview: article.excerpt ?? truncate(article.contentPlain ?? "", PREVIEW_MAX_LENGTH),
+    updatedAt: article.updatedAt,
+  };
+}
+
+// ─── Analytics events (v1.18) ───────────────────────────────────────
+// The analytics endpoints return raw per-event records carrying many
+// fields that are rarely or never populated; keep only the ones with
+// signal so a board-week of events stays well under context limits.
+
+type AnalyticsEvent = Record<string, unknown>;
+
+/** get_daily_activity: one record per email received. */
+export function shapeActivityEvent(event: AnalyticsEvent) {
+  return {
+    entityId: event.entityId ?? null,
+    entityType: event.entityType ?? null,
+    cardName: event.cardName ?? null,
+    creationDate: event.creationDate ?? null,
+    tagNames: event.tagNames ?? null,
+    assignees: event.assignees ?? null,
+    msgFrom: event.msgFrom ?? null,
+  };
+}
+
+/** get_response_times / get_avg_response_time: one record per reply. */
+export function shapeResponseTimeEvent(event: AnalyticsEvent) {
+  return {
+    entityId: event.entityId ?? null,
+    cardName: event.cardName ?? null,
+    intervalTime: event.intervalTime ?? null,
+    // The raw key is absent (not false) on follow-up replies — normalise
+    // so the field is always present as a boolean.
+    firstResponse: Boolean(event.firstResponse),
+    userReply: event.userReply ?? null,
+    responseDate: event.responseDate ?? null,
+    creationDate: event.creationDate ?? null,
+  };
+}
+
+/** get_closed_activity: one record per thread-close event. */
+export function shapeClosedEvent(event: AnalyticsEvent) {
+  return {
+    entityId: event.entityId ?? null,
+    cardName: event.cardName ?? null,
+    openedAt: event.openedAt ?? null,
+    closedAt: event.closedAt ?? null,
+    intervalTime: event.intervalTime ?? null,
+    userEmail: event.userEmail ?? null,
+    assignees: event.assignees ?? null,
   };
 }
 
