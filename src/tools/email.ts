@@ -54,7 +54,7 @@ export const emailTools = [
     title: "Reply to a thread",
     annotations: { title: "Reply to a thread", destructiveHint: true },
     description:
-      "Reply to an existing email thread. Sent from the current user's connected Gmail address (the JWT owner). For single-message threads, threadId works as messageId. For multi-message threads, pass the specific messageId you're replying to — get_thread returns it. Confirm with the user before sending when intent is unclear.",
+      "Reply to an existing email thread. Sent from the current user's connected Gmail address. For single-message threads, threadId works as messageId. For multi-message threads, pass the specific messageId you're replying to — get_thread returns it. Confirm with the user before sending when intent is unclear.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -124,7 +124,7 @@ export const emailTools = [
     title: "Search threads",
     annotations: { title: "Search threads", readOnlyHint: true },
     description:
-      "Search items across a board by content or sender. Returns matches with preview snippets. Matches can be email threads (`threadId`), task cards (`cardId`/`title`), or WhatsApp conversations (`cardId`/`contact`). Note: search may return empty results on boards with very few items. Use filter_threads or list_threads as an alternative.",
+      "Search items across a board by content or sender. Returns matches with preview snippets. Matches can be email threads (`threadId`), task cards (`cardId`/`title`), or WhatsApp conversations (`cardId`/`contact`). Note: matching is on whole words with no stemming, so \"cancellation\" will not match \"cancelling\". If a search returns nothing, try a shorter or differently spelled term, or use filter_threads or list_threads.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -238,7 +238,7 @@ export const emailTools = [
  * Response shape: { "Label_1": { threadId1: {...}, threadId2: {...} } }
  * Each label value is an object keyed by threadId, NOT an array.
  */
-function extractThreads(data: FetchEmailDataResponse): ThreadListItem[] {
+export function extractThreads(data: FetchEmailDataResponse): ThreadListItem[] {
   const threads: ThreadListItem[] = [];
   if (data.Response && typeof data.Response === "object") {
     for (const labelThreads of Object.values(data.Response)) {

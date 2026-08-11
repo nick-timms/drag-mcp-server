@@ -75,7 +75,7 @@ export const labelTools = [
     title: "Toggle labels",
     annotations: { title: "Toggle labels", destructiveHint: false },
     description:
-      "Add some labels and/or remove others from a thread in one call. The backend toggle endpoint is one-label-at-a-time, so this iterates internally.",
+      "Add some labels and/or remove others from a thread in one call.",
     inputSchema: {
       type: "object" as const,
       properties: {

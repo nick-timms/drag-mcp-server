@@ -1,7 +1,7 @@
 import type { DragClient } from "../api/client.js";
-import type { Card } from "../api/types.js";
-import { shapeCardCompact } from "../api/shaping.js";
-import { withPagination } from "../utils/pagination.js";
+import type { FetchEmailDataResponse } from "../api/types.js";
+import { shapeBoardItem } from "../api/shaping.js";
+import { extractThreads } from "./email.js";
 import { encodeTitleForCreate, isoToBackendDueDate } from "../utils/encoding.js";
 
 export const cardTools = [
@@ -15,7 +15,10 @@ export const cardTools = [
       type: "object" as const,
       properties: {
         boardId: { type: "number", description: "The board ID" },
-        columnId: { type: "number", description: "The column ID" },
+        columnId: {
+          type: "string",
+          description: "The column ID string (e.g. \"Label_1\") — use list_columns to find available IDs",
+        },
         page: { type: "number", description: "Page number (default: 1)" },
         limit: { type: "number", description: "Cards per page (default: 10)" },
       },
@@ -135,12 +138,15 @@ export const cardTools = [
   {
     name: "archive_card",
     title: "Archive a card",
-    annotations: { title: "Archive a card", destructiveHint: false },
+    annotations: { title: "Archive a card", destructiveHint: true },
     description: "Archive (delete) a card from a DragApp board.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        cardId: { type: "number", description: "The card ID to archive" },
+        cardId: {
+          type: "string",
+          description: "The card ID to archive. Numeric task IDs and hex thread IDs both work.",
+        },
       },
       required: ["cardId"],
     },
@@ -219,15 +225,23 @@ export async function handleCardTool(
 ): Promise<unknown> {
   switch (name) {
     case "list_cards_in_column": {
-      const pagination = withPagination({
-        page: args.page as number | undefined,
-        limit: args.limit as number | undefined,
-      });
-      const cards = await client.get<Card[]>(
-        `/v2/board/${args.boardId}/column/${args.columnId}/cards`,
-        pagination,
+      // The v2 column-cards endpoint resolves columns by an internal numeric
+      // ID that no tool exposes, so no columnId a caller can supply matches
+      // ("Invalid ColumnId Or BoardId"). The v1.18 fetch endpoint speaks the
+      // label-style IDs list_columns returns; it has no pagination params,
+      // so page/limit are applied here.
+      const page = (args.page as number | undefined) ?? 1;
+      const limit = (args.limit as number | undefined) ?? 10;
+      const data = await client.get<FetchEmailDataResponse>(
+        "/v1.18/teamBoard/emailData/fetch",
+        {
+          boardId: args.boardId as number,
+          columnId: normalizeColumnId(args.columnId),
+        },
       );
-      return cards.map(shapeCardCompact);
+      const items = extractThreads(data).map(shapeBoardItem);
+      const start = (page - 1) * limit;
+      return items.slice(start, start + limit);
     }
     case "get_card": {
       // The v2 /v2/card/:id GET path only returns
