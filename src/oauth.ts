@@ -326,6 +326,10 @@ function renderAuthorizePage(clientName: string, params: AuthorizeParams, error?
   .error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px;
            padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
   .fine { font-size: 12px; color: #8a94a6; margin-top: 16px; }
+  .newuser { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eef1f6;
+             font-size: 13px; color: #4b566b; }
+  .newuser a { font-weight: 600; text-decoration: none; }
+  .newuser a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -345,6 +349,7 @@ function renderAuthorizePage(clientName: string, params: AuthorizeParams, error?
       <button type="submit">Connect</button>
     </form>
     <p class="fine">Your key is verified with DragApp and handed to ${escapeHtml(clientName)} as its access token. The MCP service stores nothing.</p>
+    <div class="newuser">New to Drag? <a href="https://app.dragapp.com/signup" target="_blank" rel="noopener">Create a free account</a> to get your API key.</div>
   </main>
 </body>
 </html>`;
