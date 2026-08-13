@@ -316,12 +316,22 @@ export async function handleEmailTool(
       return shapeSendEmailResponse(response);
     }
     case "send_new_email": {
-      // TODO: verify send_new_email endpoint params against live API
+      // Verified against the API: the body field is `emailContent` — a `body`
+      // key is silently ignored and the email goes out empty. `from` is
+      // optional (the sender resolves from the auth token), and
+      // `addToBoard: true` places the new thread on the board's first column,
+      // which is what the tool description promises; without it the sent
+      // email lives only in the Sent folder.
+      const body = args.body as string;
+      if (!body || body.trim() === "") {
+        throw new Error("body must not be empty");
+      }
       return client.post("/v1.18/entityConversation/send-new-email", {
         boardId: args.boardId,
         to: args.to,
         subject: args.subject,
-        body: args.body,
+        emailContent: body,
+        addToBoard: true,
       });
     }
     case "search_threads": {
