@@ -49,8 +49,13 @@ export function shapeV1Board(board: V1Board) {
     isOwner: board.IsOwner === 1,
     unreadCount: board.UnreadEmailsCount,
     contributorCount: board.ContributorCount,
-    integrationType: board.IntegrationType ?? null,
-    isWhatsapp: board.IntegrationType === "WHATSAPP",
+    // Emit integration fields only when the API provides them: a hardcoded
+    // null/false here would contradict get_board on WhatsApp boards, and a
+    // confidently wrong value is worse than an absent one.
+    ...(board.IntegrationType !== undefined && {
+      integrationType: board.IntegrationType,
+      isWhatsapp: board.IntegrationType === "WHATSAPP",
+    }),
   };
 }
 

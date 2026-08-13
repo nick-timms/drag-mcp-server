@@ -90,6 +90,9 @@ export async function handleBoardTool(
       // v2 GET with wrapped response (auto-unwrapped by client)
       const board = await client.get<Board>(`/v2/board/${args.boardId}`);
       const result = shapeBoard(board);
+      // The API omits Id for some boards; the caller supplied the ID, so it
+      // must never come back null.
+      if (result.id == null) result.id = Number(args.boardId);
       // v2 often returns empty members — enrich from v1.18 if needed
       if (result.members.length === 0) {
         try {
