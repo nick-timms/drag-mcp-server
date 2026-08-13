@@ -1,6 +1,6 @@
 {
   "name": "@dragapp/mcp-server",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "mcpName": "com.dragapp/mcp-server",
   "description": "Shared inbox for Gmail teams: run support from Claude, ChatGPT, or Cursor. 47 tools, read and write.",
   "type": "module",
