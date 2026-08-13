@@ -124,6 +124,7 @@ export async function handleBoardTool(
           Users: board.ContributorEmails
             ? board.ContributorEmails.split(",").map((e) => e.trim()).filter(Boolean)
             : [],
+          IntegrationType: board.IntegrationType,
         }),
         columns: (data.ColumnsByBoard[String(board.Id)] ?? []).map(shapeV1Column),
       }));

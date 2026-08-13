@@ -25,7 +25,7 @@ export const tagTools = [
   {
     name: "add_tag_to_card",
     title: "Tag a card",
-    annotations: { title: "Tag a card", destructiveHint: false },
+    annotations: { title: "Tag a card", readOnlyHint: false, destructiveHint: false },
     description:
       "Add a tag to a card. Use list_tags first to find available tag IDs for the board.",
     inputSchema: {

@@ -6,9 +6,9 @@ export const commentTools = [
   {
     name: "add_comment",
     title: "Add a comment",
-    annotations: { title: "Add a comment", destructiveHint: false },
+    annotations: { title: "Add a comment", readOnlyHint: false, destructiveHint: false },
     description:
-      "Add a comment to a card. Comments are internal team messages attached to cards, visible to all board members.",
+      "Add a comment to a card. Comments are internal team messages attached to cards, visible to all board members. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
       type: "object" as const,
       properties: {

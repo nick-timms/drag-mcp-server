@@ -23,7 +23,7 @@ export const automationTools = [
   {
     name: "toggle_automation",
     title: "Toggle an automation",
-    annotations: { title: "Toggle an automation", destructiveHint: false },
+    annotations: { title: "Toggle an automation", readOnlyHint: false, destructiveHint: false },
     description:
       "Activate or deactivate a board automation. Pass active=true to enable or active=false to disable.",
     inputSchema: {
@@ -48,7 +48,7 @@ export const automationTools = [
   {
     name: "toggle_ai_drafts",
     title: "Toggle AI drafts",
-    annotations: { title: "Toggle AI drafts", destructiveHint: false },
+    annotations: { title: "Toggle AI drafts", readOnlyHint: false, destructiveHint: false },
     description:
       "Enable or disable AI-generated draft replies for a board. When enabling, you must choose a category: 'automatic' (drafts created without prompting) or 'manual' (drafts created on demand).",
     inputSchema: {

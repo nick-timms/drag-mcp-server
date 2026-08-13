@@ -49,7 +49,7 @@ export const cardTools = [
   {
     name: "create_card",
     title: "Create a card",
-    annotations: { title: "Create a card", destructiveHint: false },
+    annotations: { title: "Create a card", readOnlyHint: false, destructiveHint: false },
     description:
       "Create a new card (task) on a DragApp board. You can set the title, assign it to a team member, and add a note or comment.",
     inputSchema: {
@@ -74,7 +74,7 @@ export const cardTools = [
   {
     name: "update_card",
     title: "Update a card",
-    annotations: { title: "Update a card", destructiveHint: false },
+    annotations: { title: "Update a card", readOnlyHint: false, destructiveHint: false },
     description:
       "Update an existing card. Change the title, reassign, add a note, set a due date, or change status. Comments cannot be modified via this tool.",
     inputSchema: {
@@ -112,7 +112,7 @@ export const cardTools = [
   {
     name: "move_card",
     title: "Move a card",
-    annotations: { title: "Move a card", destructiveHint: false },
+    annotations: { title: "Move a card", readOnlyHint: false, destructiveHint: false },
     description:
       "Move a card to a different column on the same board, or to another board. newColumnId is the label-style column ID like 'Label_1' (returned by list_columns).",
     inputSchema: {
@@ -138,7 +138,7 @@ export const cardTools = [
   {
     name: "archive_card",
     title: "Archive a card",
-    annotations: { title: "Archive a card", destructiveHint: true },
+    annotations: { title: "Archive a card", readOnlyHint: false, destructiveHint: true },
     description:
       "Archive a task card, which closes it rather than deleting it. The card remains retrievable and its status becomes CLOSED. Email threads cannot be archived with this tool.",
     inputSchema: {

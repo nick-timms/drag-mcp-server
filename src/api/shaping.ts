@@ -33,6 +33,8 @@ export function shapeBoard(board: Board) {
     name: board.Name,
     owner: board.Owner,
     members,
+    integrationType: board.IntegrationType ?? null,
+    isWhatsapp: board.IntegrationType === "WHATSAPP",
   };
 }
 
