@@ -8,6 +8,7 @@ export interface Board {
   Name: string;
   Owner: string;
   Users: unknown[] | string; // comma-separated string from GROUP_CONCAT or empty array
+  IntegrationType?: string | null; // "WHATSAPP" for WhatsApp boards, null/absent for email boards
 }
 
 // ─── Boards (v1.18 — POST /teamBoard/list) ──────────────────────────

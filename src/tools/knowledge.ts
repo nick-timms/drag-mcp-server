@@ -45,9 +45,9 @@ export const knowledgeTools = [
   {
     name: "create_article",
     title: "Create an article",
-    annotations: { title: "Create an article", destructiveHint: false },
+    annotations: { title: "Create an article", readOnlyHint: false, destructiveHint: false },
     description:
-      "Create a new knowledge base article as a draft, filed under the category you specify. Publishing is done in the Drag web app. Use list_teams to find your team ID first.",
+      "Create a new knowledge base article as a draft, filed under the category you specify. Publishing is done in the Drag web app. Use list_teams to find your team ID first. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -74,9 +74,9 @@ export const knowledgeTools = [
   {
     name: "update_article",
     title: "Update an article",
-    annotations: { title: "Update an article", destructiveHint: false },
+    annotations: { title: "Update an article", readOnlyHint: false, destructiveHint: false },
     description:
-      "Update an existing knowledge base article's title, body, or category. Use list_teams to find your team ID first.",
+      "Update an existing knowledge base article's title, body, or category. Use list_teams to find your team ID first. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
       type: "object" as const,
       properties: {

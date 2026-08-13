@@ -40,7 +40,7 @@ export const contactTools = [
   {
     name: "create_contact",
     title: "Create a contact",
-    annotations: { title: "Create a contact", destructiveHint: false },
+    annotations: { title: "Create a contact", readOnlyHint: false, destructiveHint: false },
     description:
       "Create a new contact record in DragApp with name, email, and optional phone and note. The contact is filed against a board and becomes visible to that board's members.",
     inputSchema: {

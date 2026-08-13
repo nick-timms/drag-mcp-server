@@ -17,7 +17,7 @@ export const taskTools = [
   {
     name: "create_task",
     title: "Create a task",
-    annotations: { title: "Create a task", destructiveHint: false },
+    annotations: { title: "Create a task", readOnlyHint: false, destructiveHint: false },
     description:
       "Create a standalone task in DragApp. Tasks are lightweight to-do items that can be assigned, given a due date, and tracked on a board.",
     inputSchema: {
