@@ -625,9 +625,83 @@ function truncate(text: string | null | undefined, maxLength: number): string {
   return text.slice(0, maxLength) + "...";
 }
 
+/** Tags whose boundary is a line break in the text: block level, plus <br>. */
+const BLOCK_BOUNDARY =
+  /<\s*\/?\s*(?:br|p|div|tr|li|ul|ol|h[1-6]|blockquote|table|section|article|header|footer|pre|hr)\b[^>]*>/gi;
+
+/** Elements whose CONTENT is not text at all. Dropped whole, children included. */
+const NON_TEXT_ELEMENT =
+  /<\s*(script|style|head|title|noscript)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi;
+
+/** The five XML entities plus the numeric forms, which is what Gmail emits. */
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: "\u00a0",
+};
+
+function decodeEntities(text: string): string {
+  return text.replace(
+    /&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,
+    (whole, body: string) => {
+      if (body[0] === "#") {
+        const code =
+          body[1] === "x" || body[1] === "X"
+            ? parseInt(body.slice(2), 16)
+            : parseInt(body.slice(1), 10);
+        // Anything out of range, or a lone surrogate, stays as written rather
+        // than becoming U+FFFD: the raw entity is ugly but honest.
+        if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return whole;
+        if (code >= 0xd800 && code <= 0xdfff) return whole;
+        return String.fromCodePoint(code);
+      }
+      const named = NAMED_ENTITIES[body.toLowerCase()];
+      return named === undefined ? whole : named;
+    },
+  );
+}
+
+/**
+ * HTML to readable text.
+ *
+ * THIS USED TO BE `html.replace(/<[^>]*>/g, "")`, one line, and it destroyed
+ * the two things a reader needs most. Every tag was deleted with NO separator,
+ * so `<div>Pozdrowienia!</div><div>Michał</div>` came out as
+ * `Pozdrowienia!Michał` and a signature block arrived as
+ * `ŁyszkowskiCEO / Kier. Artystyczny,Fundacja Varsztatovniavarsztatovnia.pl`.
+ * Entities were never decoded either, so a name reached the model as
+ * `Micha&#x142; &#x141;yszkowski`.
+ *
+ * That is not cosmetic. This string is what the MODEL reads: paragraph
+ * structure it never sees is structure it cannot reproduce, which is why a
+ * quoted email came back as one unbroken slab, and glued words are what it
+ * quotes back to the user verbatim.
+ *
+ * BLOCK BOUNDARIES BECOME NEWLINES AND INLINE TAGS BECOME NOTHING, which is the
+ * whole distinction. A newline for every tag would break `<b>wo</b>rd` into two
+ * lines; no newline for any tag is what produced the run-together text above.
+ * Runs of three or more newlines collapse to two, so one blank line separates
+ * paragraphs however many empty divs Gmail nested to make it.
+ */
 function stripHtml(html: string | null | undefined): string {
   if (!html) return "";
-  return html.replace(/<[^>]*>/g, "").trim();
+
+  return decodeEntities(
+    html
+      // Before tag stripping, or a <script> body would survive as its own text.
+      .replace(NON_TEXT_ELEMENT, "")
+      .replace(BLOCK_BOUNDARY, "\n")
+      .replace(/<[^>]*>/g, ""),
+  )
+    .replace(/\r\n?/g, "\n")
+    // Trailing spaces on a line are invisible and defeat the blank-line collapse
+    // below, since "\n   \n" is not "\n\n".
+    .replace(/[^\S\n]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 /**
