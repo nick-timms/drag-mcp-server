@@ -6,7 +6,7 @@ export const contactTools = [
   {
     name: "search_contacts",
     title: "Search contacts",
-    annotations: { title: "Search contacts", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Search contacts", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Search for contacts by name or email. The search text must not be empty. Returns matching contact records with name, email, phone, and domain.",
     inputSchema: {
@@ -23,7 +23,7 @@ export const contactTools = [
   {
     name: "get_contact_conversations",
     title: "Get a contact's conversations",
-    annotations: { title: "Get a contact's conversations", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Get a contact's conversations", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Get all email conversations involving a specific contact. Returns thread subjects, dates, and preview text. Use search_contacts first to find the contact ID.",
     inputSchema: {

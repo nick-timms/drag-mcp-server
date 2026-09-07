@@ -6,7 +6,7 @@ export const automationTools = [
   {
     name: "list_automations",
     title: "List automations",
-    annotations: { title: "List automations", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "List automations", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all automations configured on a board. Shows automation name, trigger type, actions, and whether each is active. Returns an empty array if no automations exist.",
     inputSchema: {

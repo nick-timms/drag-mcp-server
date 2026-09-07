@@ -7,7 +7,7 @@ export const knowledgeTools = [
   {
     name: "list_articles",
     title: "List help center articles",
-    annotations: { title: "List help center articles", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "List help center articles", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all knowledge base articles for a team. Returns article titles, categories, and publication status. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -24,7 +24,7 @@ export const knowledgeTools = [
   {
     name: "get_article",
     title: "Read an article",
-    annotations: { title: "Read an article", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Read an article", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Get the full content of a knowledge base article by ID, including title, body, category, and publication status. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -107,7 +107,7 @@ export const knowledgeTools = [
   {
     name: "search_knowledge",
     title: "Search the knowledge base",
-    annotations: { title: "Search the knowledge base", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Search the knowledge base", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Search a Help Center knowledge base by keyword. teamId, slug, and query are all optional except query — with no teamId or slug, the first team that has a configured Help Center slug is used.",
     inputSchema: {

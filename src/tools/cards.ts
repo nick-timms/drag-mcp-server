@@ -8,7 +8,7 @@ export const cardTools = [
   {
     name: "list_cards_in_column",
     title: "List cards in a column",
-    annotations: { title: "List cards in a column", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "List cards in a column", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all cards in a specific column of a DragApp board. Supports pagination. Cards are email threads or tasks with titles, assignees, due dates, and custom fields.",
     inputSchema: {
@@ -28,7 +28,7 @@ export const cardTools = [
   {
     name: "get_card",
     title: "Get card details",
-    annotations: { title: "Get card details", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Get card details", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Get full details of a card (task or email thread) by ID. Returns title, status, assignees, due date, column, board, note, and timestamps.",
     inputSchema: {

@@ -11,7 +11,7 @@ export const tagTools = [
   {
     name: "list_tags",
     title: "List tags",
-    annotations: { title: "List tags", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "List tags", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all tags (coloured labels) available on a DragApp board. Tags are used to categorise and filter cards. For email thread labels, use list_labels instead.",
     inputSchema: {

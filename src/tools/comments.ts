@@ -21,7 +21,7 @@ export const commentTools = [
   {
     name: "get_comment",
     title: "Read a comment",
-    annotations: { title: "Read a comment", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Read a comment", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description: "Retrieve a specific comment by its ID.",
     inputSchema: {
       type: "object" as const,

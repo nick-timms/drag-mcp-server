@@ -6,7 +6,7 @@ export const labelTools = [
   {
     name: "list_labels",
     title: "List labels",
-    annotations: { title: "List labels", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "List labels", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all shared labels on a board. Labels are coloured markers used to categorise and filter email threads across the team.",
     inputSchema: {

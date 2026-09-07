@@ -6,7 +6,7 @@ export const whatsappTools = [
   {
     name: "get_whatsapp_conversation",
     title: "Read a WhatsApp conversation",
-    annotations: { title: "Read a WhatsApp conversation", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Read a WhatsApp conversation", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Get the message history of a WhatsApp conversation (card) on a WhatsApp board. Returns messages oldest-first with direction, text, sender, and timestamp, keeping the most recent `limit` messages. Use the cardId returned by list_threads / search_threads on a WhatsApp board (the `cardId` field).",
     inputSchema: {
@@ -28,7 +28,7 @@ export const whatsappTools = [
   {
     name: "list_whatsapp_templates",
     title: "List WhatsApp templates",
-    annotations: { title: "List WhatsApp templates", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "List WhatsApp templates", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List the pre-approved WhatsApp message templates available on a WhatsApp board. Returns each template's name, language, status, category, body text, and how many {{n}} variables it expects. Only APPROVED templates can be sent.",
     inputSchema: {

@@ -6,7 +6,7 @@ export const emailTools = [
   {
     name: "list_threads",
     title: "List threads",
-    annotations: { title: "List threads", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "List threads", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List items in a specific column of a DragApp board. Call list_columns first to get column IDs — they are strings like \"Label_1\", not numbers. A column can mix three item types: email threads (have `threadId`/`from`/`subject`), task cards (have `cardId`/`title`/`status`), and WhatsApp conversations (have `cardId`/`contact`). Use `cardId` with get_card / update_card / move_card, or with the whatsapp tools for WhatsApp items.",
     inputSchema: {
@@ -27,7 +27,7 @@ export const emailTools = [
   {
     name: "get_thread",
     title: "Read a thread",
-    annotations: { title: "Read a thread", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Read a thread", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Get a single email message by ID. Returns the HTML body (and a plain-text version), sender, recipients, attachments, and reply-to info for composing a response. You can pass either messageId or threadId — they are the same value.",
     inputSchema: {
@@ -122,7 +122,7 @@ export const emailTools = [
   {
     name: "search_threads",
     title: "Search threads",
-    annotations: { title: "Search threads", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Search threads", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Search items across a board by content or sender. Returns matches with preview snippets. Matches can be email threads (`threadId`), task cards (`cardId`/`title`), or WhatsApp conversations (`cardId`/`contact`). Note: matching is on whole words with no stemming, so \"cancellation\" will not match \"cancelling\". If a search returns nothing, try a shorter or differently spelled term, or use filter_threads or list_threads.",
     inputSchema: {
@@ -148,7 +148,7 @@ export const emailTools = [
   {
     name: "filter_threads",
     title: "Filter threads",
-    annotations: { title: "Filter threads", readOnlyHint: true, openWorldHint: false },
+    annotations: { title: "Filter threads", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Filter email threads by criteria such as assignee, tags, or column. More targeted than search — use this when you know specific filter values.",
     inputSchema: {
