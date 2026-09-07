@@ -6,7 +6,7 @@ export const whatsappTools = [
   {
     name: "get_whatsapp_conversation",
     title: "Read a WhatsApp conversation",
-    annotations: { title: "Read a WhatsApp conversation", readOnlyHint: true },
+    annotations: { title: "Read a WhatsApp conversation", readOnlyHint: true, openWorldHint: false },
     description:
       "Get the message history of a WhatsApp conversation (card) on a WhatsApp board. Returns messages oldest-first with direction, text, sender, and timestamp, keeping the most recent `limit` messages. Use the cardId returned by list_threads / search_threads on a WhatsApp board (the `cardId` field).",
     inputSchema: {
@@ -28,7 +28,7 @@ export const whatsappTools = [
   {
     name: "list_whatsapp_templates",
     title: "List WhatsApp templates",
-    annotations: { title: "List WhatsApp templates", readOnlyHint: true },
+    annotations: { title: "List WhatsApp templates", readOnlyHint: true, openWorldHint: false },
     description:
       "List the pre-approved WhatsApp message templates available on a WhatsApp board. Returns each template's name, language, status, category, body text, and how many {{n}} variables it expects. Only APPROVED templates can be sent.",
     inputSchema: {
@@ -46,7 +46,7 @@ export const whatsappTools = [
   {
     name: "send_whatsapp_message",
     title: "Send a WhatsApp message",
-    annotations: { title: "Send a WhatsApp message", readOnlyHint: false, destructiveHint: true },
+    annotations: { title: "Send a WhatsApp message", readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     description:
       "Send a free-text WhatsApp message into an existing conversation. Note: WhatsApp only allows free-text messages inside the 24-hour customer service window; outside it, use send_whatsapp_template instead. Requires an existing conversation card — starting a conversation with a number that has never messaged the business is not supported. Confirm with the user before sending when intent is unclear.",
     inputSchema: {
@@ -74,7 +74,7 @@ export const whatsappTools = [
   {
     name: "send_whatsapp_template",
     title: "Send a WhatsApp template",
-    annotations: { title: "Send a WhatsApp template", readOnlyHint: false, destructiveHint: true },
+    annotations: { title: "Send a WhatsApp template", readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     description:
       "Send a pre-approved WhatsApp template message into a conversation. Use this to reach a contact outside the 24-hour window. Call list_whatsapp_templates first to get the exact template name and language, and to see how many {{n}} variables it needs. Requires an existing conversation card — starting a conversation with a number that has never messaged the business is not supported. Confirm with the user before sending when intent is unclear.",
     inputSchema: {

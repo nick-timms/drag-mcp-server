@@ -8,7 +8,7 @@ export const cardTools = [
   {
     name: "list_cards_in_column",
     title: "List cards in a column",
-    annotations: { title: "List cards in a column", readOnlyHint: true },
+    annotations: { title: "List cards in a column", readOnlyHint: true, openWorldHint: false },
     description:
       "List all cards in a specific column of a DragApp board. Supports pagination. Cards are email threads or tasks with titles, assignees, due dates, and custom fields.",
     inputSchema: {
@@ -28,7 +28,7 @@ export const cardTools = [
   {
     name: "get_card",
     title: "Get card details",
-    annotations: { title: "Get card details", readOnlyHint: true },
+    annotations: { title: "Get card details", readOnlyHint: true, openWorldHint: false },
     description:
       "Get full details of a card (task or email thread) by ID. Returns title, status, assignees, due date, column, board, note, and timestamps.",
     inputSchema: {
@@ -49,7 +49,7 @@ export const cardTools = [
   {
     name: "create_card",
     title: "Create a card",
-    annotations: { title: "Create a card", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Create a card", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Create a new card (task) on a DragApp board. You can set the title, assign it to a team member, and add a note or comment.",
     inputSchema: {
@@ -74,7 +74,7 @@ export const cardTools = [
   {
     name: "update_card",
     title: "Update a card",
-    annotations: { title: "Update a card", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Update a card", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Update an existing card. Change the title, reassign, add a note, set a due date, or change status. Comments cannot be modified via this tool.",
     inputSchema: {
@@ -112,7 +112,7 @@ export const cardTools = [
   {
     name: "move_card",
     title: "Move a card",
-    annotations: { title: "Move a card", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Move a card", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Move a card to a different column on the same board, or to another board. newColumnId is the label-style column ID like 'Label_1' (returned by list_columns).",
     inputSchema: {
@@ -138,7 +138,7 @@ export const cardTools = [
   {
     name: "archive_card",
     title: "Archive a card",
-    annotations: { title: "Archive a card", readOnlyHint: false, destructiveHint: true },
+    annotations: { title: "Archive a card", readOnlyHint: false, destructiveHint: true, openWorldHint: false },
     description:
       "Archive a task card, which closes it rather than deleting it. The card remains retrievable and its status becomes CLOSED. Email threads cannot be archived with this tool.",
     inputSchema: {
