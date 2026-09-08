@@ -6,7 +6,7 @@ export const commentTools = [
   {
     name: "add_comment",
     title: "Add a comment",
-    annotations: { title: "Add a comment", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Add a comment", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Add a comment to a card. Comments are internal team messages attached to cards, visible to all board members. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
@@ -21,7 +21,7 @@ export const commentTools = [
   {
     name: "get_comment",
     title: "Read a comment",
-    annotations: { title: "Read a comment", readOnlyHint: true },
+    annotations: { title: "Read a comment", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description: "Retrieve a specific comment by its ID.",
     inputSchema: {
       type: "object" as const,

@@ -6,7 +6,7 @@ export const labelTools = [
   {
     name: "list_labels",
     title: "List labels",
-    annotations: { title: "List labels", readOnlyHint: true },
+    annotations: { title: "List labels", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all shared labels on a board. Labels are coloured markers used to categorise and filter email threads across the team.",
     inputSchema: {
@@ -23,7 +23,7 @@ export const labelTools = [
   {
     name: "add_label_to_thread",
     title: "Add a label to a thread",
-    annotations: { title: "Add a label to a thread", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Add a label to a thread", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Add a shared label to an email thread (or task). Use list_labels first to find available label IDs for the board.",
     inputSchema: {
@@ -48,7 +48,7 @@ export const labelTools = [
   {
     name: "remove_label_from_thread",
     title: "Remove a label from a thread",
-    annotations: { title: "Remove a label from a thread", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Remove a label from a thread", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Remove a shared label from an email thread (or task).",
     inputSchema: {
@@ -73,7 +73,7 @@ export const labelTools = [
   {
     name: "toggle_labels",
     title: "Toggle labels",
-    annotations: { title: "Toggle labels", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Toggle labels", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Add some labels and/or remove others from a thread in one call.",
     inputSchema: {

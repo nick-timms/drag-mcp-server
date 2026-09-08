@@ -6,7 +6,7 @@ export const emailTools = [
   {
     name: "list_threads",
     title: "List threads",
-    annotations: { title: "List threads", readOnlyHint: true },
+    annotations: { title: "List threads", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List items in a specific column of a DragApp board. Call list_columns first to get column IDs — they are strings like \"Label_1\", not numbers. A column can mix three item types: email threads (have `threadId`/`from`/`subject`), task cards (have `cardId`/`title`/`status`), and WhatsApp conversations (have `cardId`/`contact`). Use `cardId` with get_card / update_card / move_card, or with the whatsapp tools for WhatsApp items.",
     inputSchema: {
@@ -27,7 +27,7 @@ export const emailTools = [
   {
     name: "get_thread",
     title: "Read a thread",
-    annotations: { title: "Read a thread", readOnlyHint: true },
+    annotations: { title: "Read a thread", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Get a single email message by ID. Returns the HTML body (and a plain-text version), sender, recipients, attachments, and reply-to info for composing a response. You can pass either messageId or threadId — they are the same value.",
     inputSchema: {
@@ -52,7 +52,7 @@ export const emailTools = [
   {
     name: "reply_to_thread",
     title: "Reply to a thread",
-    annotations: { title: "Reply to a thread", readOnlyHint: false, destructiveHint: true },
+    annotations: { title: "Reply to a thread", readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     description:
       "Reply to an existing email thread. Sent from the current user's connected Gmail address. For single-message threads, threadId works as messageId. For multi-message threads, pass the specific messageId you're replying to — get_thread returns it. Confirm with the user before sending when intent is unclear. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
@@ -93,7 +93,7 @@ export const emailTools = [
   {
     name: "send_new_email",
     title: "Send a new email",
-    annotations: { title: "Send a new email", readOnlyHint: false, destructiveHint: true },
+    annotations: { title: "Send a new email", readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     description:
       "Compose and send a new email from a DragApp board's connected email address. Creates a new thread in the board. Confirm with the user before sending when intent is unclear. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
@@ -122,7 +122,7 @@ export const emailTools = [
   {
     name: "search_threads",
     title: "Search threads",
-    annotations: { title: "Search threads", readOnlyHint: true },
+    annotations: { title: "Search threads", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Search items across a board by content or sender. Returns matches with preview snippets. Matches can be email threads (`threadId`), task cards (`cardId`/`title`), or WhatsApp conversations (`cardId`/`contact`). Note: matching is on whole words with no stemming, so \"cancellation\" will not match \"cancelling\". If a search returns nothing, try a shorter or differently spelled term, or use filter_threads or list_threads.",
     inputSchema: {
@@ -148,7 +148,7 @@ export const emailTools = [
   {
     name: "filter_threads",
     title: "Filter threads",
-    annotations: { title: "Filter threads", readOnlyHint: true },
+    annotations: { title: "Filter threads", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Filter email threads by criteria such as assignee, tags, or column. More targeted than search — use this when you know specific filter values.",
     inputSchema: {
@@ -179,7 +179,7 @@ export const emailTools = [
   {
     name: "move_thread",
     title: "Move a thread",
-    annotations: { title: "Move a thread", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Move a thread", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Move an email thread to a different column or board. Use this to triage emails — e.g. move from Inbox to In Progress, or to a different team's board.",
     inputSchema: {
@@ -208,7 +208,7 @@ export const emailTools = [
   {
     name: "move_threads_bulk",
     title: "Move threads in bulk",
-    annotations: { title: "Move threads in bulk", readOnlyHint: false, destructiveHint: true },
+    annotations: { title: "Move threads in bulk", readOnlyHint: false, destructiveHint: true, openWorldHint: false },
     description:
       "Move multiple email threads at once to a different column or board. Use this for batch triage operations.",
     inputSchema: {

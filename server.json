@@ -6,18 +6,18 @@
     "url": "https://github.com/nick-timms/drag-mcp-server",
     "source": "github"
   },
-  "version": "0.8.0",
+  "version": "0.9.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@dragapp/mcp-server",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
-          "description": "Your DragApp API key. Get it from app.dragapp.com → Settings → Integrations.",
+          "description": "Your DragApp API key. Get it from app.dragapp.com \u2192 Settings \u2192 Integrations.",
           "isRequired": true,
           "format": "string",
           "isSecret": true,

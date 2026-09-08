@@ -10,7 +10,7 @@ export const analyticsTools = [
   {
     name: "get_response_times",
     title: "Get response times",
-    annotations: { title: "Get response times", readOnlyHint: true },
+    annotations: { title: "Get response times", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List individual first-response events for a board over a date range. Every event is a first response to a new email; use get_avg_response_time if you also need follow-up replies. Each event gives intervalTime in milliseconds, the responder, and the thread. Returns raw events, not computed metrics.",
     inputSchema: {
@@ -35,7 +35,7 @@ export const analyticsTools = [
   {
     name: "get_avg_response_time",
     title: "Get average response time",
-    annotations: { title: "Get average response time", readOnlyHint: true },
+    annotations: { title: "Get average response time", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List individual reply events on a board over a date range, covering follow-up replies as well as first responses. Each event gives intervalTime in milliseconds, the responder, and the thread; firstResponse is true on first responses and absent on follow-ups. Returns raw events, not a computed average.",
     inputSchema: {
@@ -60,7 +60,7 @@ export const analyticsTools = [
   {
     name: "get_daily_activity",
     title: "Get daily activity",
-    annotations: { title: "Get daily activity", readOnlyHint: true },
+    annotations: { title: "Get daily activity", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List individual emails received on a board over a date range, each with its creation timestamp. Returns raw records, not per-day counts. Narrow the date range on busy boards.",
     inputSchema: {
@@ -85,7 +85,7 @@ export const analyticsTools = [
   {
     name: "get_closed_activity",
     title: "Get closed-thread activity",
-    annotations: { title: "Get closed-thread activity", readOnlyHint: true },
+    annotations: { title: "Get closed-thread activity", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List individual thread-close events for a board over a date range. Each event gives openedAt, closedAt, intervalTime in milliseconds, and who closed it. Returns raw events, not per-day counts.",
     inputSchema: {

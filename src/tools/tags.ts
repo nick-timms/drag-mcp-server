@@ -11,7 +11,7 @@ export const tagTools = [
   {
     name: "list_tags",
     title: "List tags",
-    annotations: { title: "List tags", readOnlyHint: true },
+    annotations: { title: "List tags", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all tags (coloured labels) available on a DragApp board. Tags are used to categorise and filter cards. For email thread labels, use list_labels instead.",
     inputSchema: {
@@ -25,7 +25,7 @@ export const tagTools = [
   {
     name: "add_tag_to_card",
     title: "Tag a card",
-    annotations: { title: "Tag a card", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Tag a card", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Add a tag to a card. Use list_tags first to find available tag IDs for the board.",
     inputSchema: {

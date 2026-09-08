@@ -7,7 +7,7 @@ export const knowledgeTools = [
   {
     name: "list_articles",
     title: "List help center articles",
-    annotations: { title: "List help center articles", readOnlyHint: true },
+    annotations: { title: "List help center articles", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "List all knowledge base articles for a team. Returns article titles, categories, and publication status. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -24,7 +24,7 @@ export const knowledgeTools = [
   {
     name: "get_article",
     title: "Read an article",
-    annotations: { title: "Read an article", readOnlyHint: true },
+    annotations: { title: "Read an article", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Get the full content of a knowledge base article by ID, including title, body, category, and publication status. Use list_teams to find your team ID first.",
     inputSchema: {
@@ -45,7 +45,7 @@ export const knowledgeTools = [
   {
     name: "create_article",
     title: "Create an article",
-    annotations: { title: "Create an article", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Create an article", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Create a new knowledge base article as a draft, filed under the category you specify. Publishing is done in the Drag web app. Use list_teams to find your team ID first. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
@@ -74,7 +74,7 @@ export const knowledgeTools = [
   {
     name: "update_article",
     title: "Update an article",
-    annotations: { title: "Update an article", readOnlyHint: false, destructiveHint: false },
+    annotations: { title: "Update an article", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
       "Update an existing knowledge base article's title, body, or category. Use list_teams to find your team ID first. Reference: https://www.dragapp.com/docs/mcp/",
     inputSchema: {
@@ -107,7 +107,7 @@ export const knowledgeTools = [
   {
     name: "search_knowledge",
     title: "Search the knowledge base",
-    annotations: { title: "Search the knowledge base", readOnlyHint: true },
+    annotations: { title: "Search the knowledge base", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
       "Search a Help Center knowledge base by keyword. teamId, slug, and query are all optional except query — with no teamId or slug, the first team that has a configured Help Center slug is used.",
     inputSchema: {
