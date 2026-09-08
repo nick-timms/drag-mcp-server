@@ -9,6 +9,7 @@ import {
 import type { IncomingMessage, ServerResponse } from "node:http";
 import Redis from "ioredis";
 import type { RateLimitDecision } from "./rateLimit.js";
+import { redisConnectionOptions } from "./utils/redisOptions.js";
 
 /**
  * OAuth 2.1 for the hosted MCP endpoint.
@@ -143,13 +144,19 @@ function createCodeStore(): { consume: (jti: string) => Promise<boolean>; close:
     return { consume: async () => true, close: async () => {} };
   }
   const redis = new Redis({
-    host,
-    port: Number(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
+    ...redisConnectionOptions(host),
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false,
   });
-  redis.on("error", () => {});
+  // Logged once, for the same reason as in the rate limiter: a swallowed
+  // connection error leaves a misconfigured Redis invisible in the logs.
+  let warnedOutage = false;
+  redis.on("error", (err: Error) => {
+    if (!warnedOutage) {
+      console.error(`[mcp] oauth code store: Redis connection error: ${err.message}`);
+      warnedOutage = true;
+    }
+  });
   return {
     async consume(jti: string): Promise<boolean> {
       try {

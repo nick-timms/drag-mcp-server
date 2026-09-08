@@ -17,6 +17,12 @@ const PORT = Number(process.env.MCP_PORT) || 3001;
 // works whether NGINX strips the /mcp prefix or passes it through.
 const MCP_PATH = process.env.MCP_PATH || "/mcp";
 
+// OpenAI plugin-directory domain verification challenge, from the environment
+// (see .env.example). Served unauthenticated at the origin root so OpenAI can
+// confirm we control the domain. Unset — as it is for local runs and for the
+// npm/stdio entry point — means the route is simply not served.
+const OPENAI_APPS_CHALLENGE = process.env.OPENAI_APPS_CHALLENGE?.trim();
+
 const MISSING_TOKEN_MESSAGE =
   "Authentication required. Your AI client can connect via OAuth (a DragApp connect page will open), or send your DragApp API key in the Authorization header (raw token or 'Bearer <token>'). Get your key from DragApp → Settings → Integrations. Setup guide: https://www.dragapp.com/blog/connect-shared-inbox-to-claude-mcp/";
 
@@ -186,6 +192,20 @@ async function requestHandler(
       resources: [],
       prompts: [],
     });
+    return;
+  }
+
+  // OpenAI plugin-directory domain verification. The body is the challenge and
+  // nothing else — no newline, no JSON wrapper — or their check fails. Matched
+  // by suffix like the server card above, so it works whether or not NGINX
+  // strips a prefix on the way here.
+  if (
+    method === "GET" &&
+    OPENAI_APPS_CHALLENGE &&
+    pathname.endsWith("/.well-known/openai-apps-challenge")
+  ) {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end(OPENAI_APPS_CHALLENGE);
     return;
   }
 

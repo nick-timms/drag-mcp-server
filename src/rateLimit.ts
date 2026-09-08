@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import Redis from "ioredis";
+import { redisConnectionOptions } from "./utils/redisOptions.js";
 
 /**
  * Dedicated rate limiter for the hosted MCP HTTP endpoint.
@@ -7,9 +8,10 @@ import Redis from "ioredis";
  * This is a standalone reimplementation of the backend's Redis fixed-window
  * algorithm (INCR + expiry on first hit within a window) — the backend's
  * middleware is entangled with its own request internals and is not cleanly
- * importable, so the same algorithm is reproduced here. Env-var names
- * (REDIS_HOST/REDIS_PORT/REDIS_PASSWORD) match the backend's conventions so a
- * deployment can point at the same Redis.
+ * importable, so the same algorithm is reproduced here. Connection settings
+ * come from redisConnectionOptions(), whose env-var names match the
+ * conventions used by the rest of the platform, so a deployment can point at
+ * the same Redis with the same values.
  *
  * Scope: per DragApp token, keyed on a SHA-256 hash of the token — the raw JWT
  * is never stored in, or used as, a Redis key. Unauthenticated requests fall
@@ -93,9 +95,7 @@ export function createRateLimiter(): RateLimiter {
   const failOpen = process.env.MCP_RATE_LIMIT_FAIL_OPEN !== "false";
 
   const redis = new Redis({
-    host,
-    port: parsePositiveInt(process.env.REDIS_PORT, 6379),
-    password: process.env.REDIS_PASSWORD || undefined,
+    ...redisConnectionOptions(host),
     // Don't queue commands forever when Redis is down — fail fast so the
     // fail-open/closed policy kicks in instead of hanging the request.
     maxRetriesPerRequest: 1,
@@ -103,12 +103,19 @@ export function createRateLimiter(): RateLimiter {
     lazyConnect: false,
   });
 
-  // Redis emits 'error' asynchronously; swallow it here (never log the value,
-  // which could contain connection detail) so an outage doesn't crash the
-  // process. Individual check() calls handle the failure per-request.
-  redis.on("error", () => {});
-
   let warnedOutage = false;
+
+  // Redis emits 'error' asynchronously; an outage must not crash the process,
+  // so it is handled here rather than left to bubble. The message (an
+  // ECONNREFUSED, a WRONGPASS, a TLS handshake failure) is logged once per
+  // outage: without it a misconfigured connection is undiagnosable from the
+  // logs. ioredis errors carry the host and port, never the password.
+  redis.on("error", (err: Error) => {
+    if (!warnedOutage) {
+      console.error(`[mcp] rate limiter: Redis connection error: ${err.message}`);
+      warnedOutage = true;
+    }
+  });
 
   console.error(
     `[mcp] rate limiting enabled: ${limit} requests / ${windowSeconds}s per token (fail-${failOpen ? "open" : "closed"})`,

@@ -65,11 +65,14 @@ no Redis, the short TTL + PKCE binding is the protection.
 | `REDIS_HOST`               | _(unset → limiter off)_     | Redis host for rate limiting. If unset, rate limiting is disabled and all requests are allowed. |
 | `REDIS_PORT`               | `6379`                      | Redis port. |
 | `REDIS_PASSWORD`           | _(none)_                    | Redis password (optional). |
+| `REDIS_DATABASE`           | `0`                         | Redis logical database index. |
+| `REDIS_TLS`                | `0`                         | Set to `1` when the Redis server requires TLS. A TLS-only server refuses plaintext connections, and the failure surfaces only as a generic connection error. |
 | `MCP_RATE_LIMIT`           | `60`                        | Max requests per window, per token. |
 | `MCP_RATE_WINDOW`          | `60`                        | Rate-limit window, in seconds. |
 | `MCP_RATE_LIMIT_FAIL_OPEN` | `true`                      | On a Redis outage: `true` allows requests (fail-open), `false` blocks (fail-closed). |
 | `MCP_PUBLIC_URL`           | `https://app.dragapp.com/mcp` | Public base URL used in OAuth discovery metadata and advertised endpoint URLs. |
 | `MCP_OAUTH_SECRET`         | _(ephemeral if unset)_      | **Set this in production.** Signs OAuth client IDs and encrypts authorization codes (`openssl rand -hex 32`). Must be identical across all instances; without it, OAuth logins break on every restart. |
+| `OPENAI_APPS_CHALLENGE`    | _(unset → route not served)_ | Domain-verification challenge, served verbatim as `text/plain` at `/.well-known/openai-apps-challenge`. Requires an NGINX location for that path (see below) — it sits at the domain root, not under `/mcp`. |
 
 `DRAG_API_KEY` is **not** used by the HTTP entry point — tokens arrive per request.
 

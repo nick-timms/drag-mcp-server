@@ -26,6 +26,9 @@ module.exports = {
         // REDIS_HOST: "...",
         // REDIS_PORT: 6379,
         // REDIS_PASSWORD: "...",
+        // REDIS_DATABASE: 0,
+        // REDIS_TLS: "1",   // required if the Redis server enforces TLS
+        // OPENAI_APPS_CHALLENGE: "...",  // domain-verification challenge
         // MCP_RATE_LIMIT: 60,
         // MCP_RATE_WINDOW: 60,
         // MCP_RATE_LIMIT_FAIL_OPEN: "true",
