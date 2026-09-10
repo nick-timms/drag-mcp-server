@@ -8,7 +8,7 @@ export const boardTools = [
     title: "List boards",
     annotations: { title: "List boards", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
-      "List all DragApp boards the user has access to. Call this first to discover board IDs. Returns board name, owner, unread count, and contributor info.",
+      "List the shared inboxes (boards) the user has access to — e.g. the support@ or sales@ inbox, a Gmail label the team shares, or a WhatsApp or task board. Call this first to discover board IDs; the other tools take a boardId. Returns board name, owner, unread count, and contributor info.",
     inputSchema: {
       type: "object" as const,
       properties: {},

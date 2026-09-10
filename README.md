@@ -75,6 +75,8 @@ Ask your AI assistant:
 - "Search for emails mentioning 'invoice' on the Sales board"
 - "What's my team's average response time this week?"
 - "List all knowledge base articles"
+- "Search our help center for how invoices work"
+- "Assign the newest email on the Support board to Sarah"
 - "Create a task on the Support board assigned to Sarah"
 
 ## Tools

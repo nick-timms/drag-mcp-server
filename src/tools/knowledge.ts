@@ -109,7 +109,7 @@ export const knowledgeTools = [
     title: "Search the knowledge base",
     annotations: { title: "Search the knowledge base", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
-      "Search a Help Center knowledge base by keyword. teamId, slug, and query are all optional except query — with no teamId or slug, the first team that has a configured Help Center slug is used.",
+      "Search your team's knowledge base — the Help Center articles, FAQs and how-to guides your team wrote in Drag (e.g. \"how do invoices work\", \"refund policy\"). Use this whenever the user asks to look something up in the knowledge base, help center, help articles, docs or FAQ, or wants an answer grounded in the team's own documentation; it searches Drag, not the web. Returns matching articles with id, title, preview and updatedAt — use get_article for the full text. Only query is required: with no teamId or slug, the first team that has a Help Center configured is used.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -123,7 +123,7 @@ export const knowledgeTools = [
         },
         query: {
           type: "string",
-          description: "Search query text",
+          description: "What to look up — keywords or a short phrase (e.g. \"invoices\")",
         },
       },
       required: ["query"],

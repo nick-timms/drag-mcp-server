@@ -73,15 +73,18 @@ export const cardTools = [
   },
   {
     name: "update_card",
-    title: "Update a card",
-    annotations: { title: "Update a card", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    title: "Update or assign a card",
+    annotations: { title: "Update or assign a card", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
-      "Update an existing card. Change the title, reassign, add a note, set a due date, or change status. Comments cannot be modified via this tool.",
+      "Assign or update an email thread, WhatsApp conversation or task card on a shared inbox board. This is the tool for assigning a thread (an email or conversation) to a teammate: pass the item's `threadId` or `cardId` as cardId and the teammate's email as assignee. It can also rename the item, add a note, set a due date, change the status (OPEN/PENDING/CLOSED, or mark read/unread), or set a colour. To move an item between columns use move_card or move_thread; to add labels use add_label_to_thread. Comments cannot be modified via this tool.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        cardId: { type: "string", description: "The card ID to update" },
-        boardId: { type: "number", description: "Board the card belongs to" },
+        cardId: {
+          type: "string",
+          description: "ID of the item to update: an email thread's `threadId` (hex string, from list_threads/search_threads/filter_threads), a task's numeric `cardId`, or a WhatsApp conversation's `cardId`.",
+        },
+        boardId: { type: "number", description: "Board the item belongs to" },
         columnId: {
           type: "string",
           description: "Column the card is in (string column ID like 'Label_1')",
@@ -92,7 +95,7 @@ export const cardTools = [
             { type: "string" },
             { type: "array", items: { type: "string" } },
           ],
-          description: "Assignee email(s). Single string or array of strings.",
+          description: "Teammate email address(es) to assign the item to — a single string or an array of strings. Find teammates with list_board_members.",
         },
         note: { type: "string", description: "New note body" },
         dueDate: {
@@ -197,7 +200,7 @@ interface DetailPageResponse {
   Snoozed?: number;
   DueDate?: string | null;
   Duration?: number | null;
-  Emails?: unknown[];
+  Emails?: unknown; // Gmail thread metadata for email threads, [] otherwise
   ContactDetails?: unknown;
   Error?: boolean;
   Success?: boolean;
