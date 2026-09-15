@@ -158,12 +158,26 @@ export function createMcpServer(opts: McpServerOptions): Server {
     return { tools: ALL_TOOLS };
   });
 
+  /** Required arguments (per the tool's inputSchema) that the call left undefined, null or empty. */
+  const missingRequiredArgs = (toolName: string, args: Record<string, unknown>): string[] => {
+    const tool = ALL_TOOLS.find((t) => t.name === toolName);
+    const required = (tool?.inputSchema as { required?: string[] } | undefined)?.required ?? [];
+    return required.filter((key) => args[key] === undefined || args[key] === null || args[key] === "");
+  };
+
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args = {} } = request.params;
 
     const token = opts.getToken();
     if (!token || token.trim() === "") {
       return errorContent(missingTokenMessage, 401);
+    }
+
+    // The schemas mark required arguments but nothing enforced them: a model calling list_labels without a
+    // boardId reached the backend as a request with no query string and a 400 "BoardId is required" in its log.
+    const missing = missingRequiredArgs(name, args as Record<string, unknown>);
+    if (missing.length) {
+      return errorContent(`Missing required argument${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}`, 400);
     }
 
     try {
