@@ -143,13 +143,17 @@ export const cardTools = [
     title: "Archive a card",
     annotations: { title: "Archive a card", readOnlyHint: false, destructiveHint: true, openWorldHint: false },
     description:
-      "Archive a task card, which closes it rather than deleting it. The card remains retrievable and its status becomes CLOSED. Email threads cannot be archived with this tool.",
+      "Archive a card (email thread or task). Archiving is NOT deleting: for an email thread it removes the thread from the board and from the Gmail inbox (removes the INBOX label) — the email is kept in Gmail's All Mail and is never moved to Trash. For a task card, the task is closed (status CLOSED) and remains retrievable. Use this tool whenever a user asks to archive an email, thread or conversation.",
     inputSchema: {
       type: "object" as const,
       properties: {
         cardId: {
+          type: "string",
+          description: "ID of the item to archive: an email thread's `threadId` (hex string, from list_threads/search_threads/filter_threads) or a task's numeric `cardId`.",
+        },
+        boardId: {
           type: "number",
-          description: "The numeric task card ID to archive",
+          description: "Board the item belongs to. Optional; auto-resolved from the card when omitted.",
         },
       },
       required: ["cardId"],
@@ -408,7 +412,52 @@ export async function handleCardTool(
       });
     }
     case "archive_card": {
-      return client.delete(`/v2/card/${args.cardId}`);
+      const cardId = String(args.cardId);
+      const entityType = entityTypeFor(cardId);
+
+      if (entityType === "1") {
+        // Tasks: the v2 DELETE path runs the task archive (closes the task,
+        // status CLOSED, still retrievable). Nothing is deleted.
+        return client.delete(`/v2/card/${cardId}`);
+      }
+
+      // Email threads: do NOT use DELETE /v2/card/:id here. For a thread ID
+      // that endpoint adds the Gmail TRASH label alongside removing INBOX, so
+      // the email lands in Gmail's Trash — a delete, not an archive. The
+      // label-modify endpoint with only INBOX removed is what the web app's
+      // own Archive action calls: the thread leaves the board and the inbox
+      // but stays in All Mail. It needs the board ID (the request is a no-op
+      // without it), so resolve it the same way move_card does.
+      let boardId = args.boardId as number | undefined;
+      let columnId: string | undefined;
+      if (boardId === undefined) {
+        const detail = await client.get<DetailPageResponse>(
+          "/v1.18/entityConversation/detail-page",
+          {
+            entityId: cardId,
+            entityType,
+            skipUpdateReadStatus: "true",
+          },
+        );
+        if (!detail.BoardId) {
+          throw new Error(
+            "Could not resolve the thread's board; pass boardId explicitly.",
+          );
+        }
+        boardId = detail.BoardId;
+        columnId = detail.ColumnId ?? undefined;
+      }
+
+      const body: Record<string, unknown> = {
+        id: cardId,
+        boardId,
+        addLabelIds: JSON.stringify([]),
+        removeLabelIds: JSON.stringify(["INBOX"]),
+      };
+      if (columnId) body.columnId = columnId;
+
+      await client.post("/v1.18/modify", body);
+      return { id: cardId, boardId, archived: true };
     }
     default:
       throw new Error(`Unknown card tool: ${name}`);
