@@ -8,6 +8,17 @@ export class DragApiError extends Error {
   }
 }
 
+/**
+ * Sent on every request so DragApp can tell this connector's calls apart. A
+ * team whose admin turned AI features off has requests carrying it refused
+ * (403 with code "ai_disabled_by_admin"); nothing else changes.
+ */
+export const CLIENT_HEADER = "X-Drag-Client";
+export const CLIENT_NAME = "mcp";
+
+/** Error code DragApp returns when the team's admin turned AI features off. */
+export const AI_DISABLED_CODE = "ai_disabled_by_admin";
+
 /** Default public base URL for the DragApp API. */
 const DEFAULT_API_BASE = "https://app.dragapp.com";
 
@@ -74,6 +85,7 @@ export class DragClient {
       Authorization: this.token,
       "Content-Type": "application/json",
       "Client-ID": this.clientId,
+      [CLIENT_HEADER]: CLIENT_NAME,
     };
 
     const response = await fetch(url, {
@@ -84,6 +96,12 @@ export class DragClient {
 
     if (!response.ok) {
       const text = await response.text().catch(() => "Unknown error");
+      if (response.status === 403 && text.includes(AI_DISABLED_CODE)) {
+        throw new DragApiError(
+          "AI tools are turned off for this DragApp team by an admin, so this connector can't be used. Ask a team admin to turn AI features back on in DragApp → Settings → AI.",
+          403,
+        );
+      }
       throw new DragApiError(
         `Drag API error: ${response.status} — ${text}`,
         response.status,

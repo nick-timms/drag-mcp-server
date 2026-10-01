@@ -10,6 +10,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import Redis from "ioredis";
 import type { RateLimitDecision } from "./rateLimit.js";
 import { redisConnectionOptions } from "./utils/redisOptions.js";
+import { AI_DISABLED_CODE, CLIENT_HEADER, CLIENT_NAME } from "./api/client.js";
 
 /**
  * OAuth 2.1 for the hosted MCP endpoint.
@@ -175,7 +176,7 @@ function createCodeStore(): { consume: (jti: string) => Promise<boolean>; close:
 
 // ── DragApp key verification ──────────────────────────────────────────
 
-type KeyCheck = "ok" | "invalid" | "unavailable";
+type KeyCheck = "ok" | "invalid" | "unavailable" | "ai_off";
 
 /** Verify the pasted key with a cheap Drag API call so bad keys are caught on
  *  the connect page, not on the user's first tool call. Never logged. */
@@ -184,9 +185,13 @@ async function verifyKey(key: string): Promise<KeyCheck> {
   try {
     const res = await fetch(`${base}/v1.18/teamBoard/list`, {
       method: "POST",
-      headers: { Authorization: key, "Content-Type": "application/json" },
+      headers: { Authorization: key, "Content-Type": "application/json", [CLIENT_HEADER]: CLIENT_NAME },
       signal: AbortSignal.timeout(10_000),
     });
+    if (res.status === 403) {
+      const text = await res.text().catch(() => "");
+      if (text.includes(AI_DISABLED_CODE)) return "ai_off";
+    }
     if (res.status === 401 || res.status === 403) return "invalid";
     return res.ok ? "ok" : "unavailable";
   } catch {
@@ -470,6 +475,10 @@ export function createOAuthRouter(deps: {
     const check = await verifyKey(key);
     if (check === "invalid") {
       sendHtml(res, 401, renderAuthorizePage(clientName, v.params, "That API key was rejected by DragApp. Copy it again from Settings → Integrations."));
+      return;
+    }
+    if (check === "ai_off") {
+      sendHtml(res, 403, renderAuthorizePage(clientName, v.params, "AI tools are turned off for your DragApp team by an admin, so this connector can't be used. Ask a team admin to turn AI features back on in DragApp → Settings → AI."));
       return;
     }
     if (check === "unavailable") {
