@@ -248,7 +248,8 @@ function sendHtml(res: ServerResponse, status: number, html: string): void {
     "Content-Type": "text/html; charset=utf-8",
     "Cache-Control": "no-store",
     "X-Frame-Options": "DENY",
-    "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; form-action *",
+    // img-src data: lets the inlined logo and favicon load; nothing external is allowed.
+    "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; form-action *",
   });
   res.end(html);
 }
