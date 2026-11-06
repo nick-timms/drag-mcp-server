@@ -171,7 +171,8 @@ export const emailTools = [
         tagList: {
           type: "array",
           items: { type: "string" },
-          description: "Filter by shared label IDs (as strings). Use list_labels to get available label IDs.",
+          description:
+            "Filter by shared label IDs: the numeric id of each label as a string (e.g. \"78\"), from list_labels. A label's name or a #hashtag is not an id and is rejected.",
         },
       },
       required: ["boardId", "columnId"],
@@ -503,7 +504,18 @@ export async function handleEmailTool(
         columnId: args.columnId,
       };
       if (args.assignees) filterBody.assignees = JSON.stringify(args.assignees);
-      if (args.tagList) filterBody.tagList = JSON.stringify(args.tagList);
+      if (args.tagList) {
+        // The backend builds `LabelId IN (...)` from these: a name such as "#78" became `IN (NaN)` and a 500,
+        // so only digit strings go through.
+        const tagList = (Array.isArray(args.tagList) ? args.tagList : [args.tagList]).map((tag) => String(tag).trim());
+        const invalid = tagList.filter((tag) => !/^\d+$/.test(tag));
+        if (invalid.length) {
+          throw new Error(
+            `tagList must hold label ids (digits) from list_labels, not label names: ${JSON.stringify(invalid)}`,
+          );
+        }
+        filterBody.tagList = JSON.stringify(tagList);
+      }
 
       const data = await client.post<FetchEmailDataResponse>(
         "/v1.18/teamBoard/emailData/filter-emails",
