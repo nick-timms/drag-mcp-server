@@ -3,6 +3,10 @@ import type { FetchEmailDataResponse } from "../api/types.js";
 import { shapeBoardItem } from "../api/shaping.js";
 import { extractThreads } from "./email.js";
 import { encodeTitleForCreate, isoToBackendDueDate } from "../utils/encoding.js";
+import { DragApiError } from "../api/client.js";
+import { resolveAssignees } from "../api/members.js";
+import { cardCustomFields } from "../api/customFields.js";
+import { noteImageRefs } from "../files/noteImages.js";
 
 export const cardTools = [
   {
@@ -30,7 +34,7 @@ export const cardTools = [
     title: "Get card details",
     annotations: { title: "Get card details", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     description:
-      "Get full details of a card (task or email thread) by ID. Returns title, status, assignees, due date, column, board, note, and timestamps.",
+      "Get full details of a card (task or email thread) by ID. Returns title, status, assignees, due date, column, board, note, timestamps, the card's custom field values (Plus plan), any images in its note (read them with read_note_image) and, for an email thread, hasDraft: whether an unsent reply draft is saved on it (read it with get_draft). Files uploaded to the card are listed by list_card_files.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -63,7 +67,7 @@ export const cardTools = [
         title: { type: "string", description: "Card title" },
         assignee: {
           type: "string",
-          description: "Email address of an assignee (single email).",
+          description: "A board member to assign: their email address (or their name, when only one member has it). Checked against the board's members first.",
         },
         note: { type: "string", description: "Note to add to the card" },
         comment: { type: "string", description: "Comment to add to the card" },
@@ -76,7 +80,7 @@ export const cardTools = [
     title: "Update or assign a card",
     annotations: { title: "Update or assign a card", readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     description:
-      "Assign or update an email thread, WhatsApp conversation or task card on a shared inbox board. This is the tool for assigning a thread (an email or conversation) to a teammate: pass the item's `threadId` or `cardId` as cardId and the teammate's email as assignee. It can also rename the item, add a note, set a due date, change the status (OPEN/PENDING/CLOSED, or mark read/unread), or set a colour. To move an item between columns use move_card or move_thread; to add labels use add_label_to_thread. Comments cannot be modified via this tool.",
+      "Assign or update an email thread, WhatsApp conversation or task card on a shared inbox board. This is the tool for assigning a thread (an email or conversation) to a teammate: pass the item's `threadId` or `cardId` as cardId and the teammate's email as assignee. Assigning REPLACES the current assignees unless assignMode is \"add\"; an empty list unassigns everyone. Each assignee is checked against the board's members first: someone who isn't a member, who was invited but hasn't joined, or the board's Google Group address is refused and nothing is changed. It can also rename the item, add a note, set a due date, change the status (OPEN/PENDING/CLOSED, or mark read/unread), or set a colour. To move an item between columns use move_card or move_thread; to add labels use add_label_to_thread. Comments cannot be modified via this tool.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -95,7 +99,12 @@ export const cardTools = [
             { type: "string" },
             { type: "array", items: { type: "string" } },
           ],
-          description: "Teammate email address(es) to assign the item to — a single string or an array of strings. Find teammates with list_board_members.",
+          description: "Board member email address(es) to assign — a single string or an array of strings. A member's name also works when only one member has it. Find members with list_board_members.",
+        },
+        assignMode: {
+          type: "string",
+          enum: ["replace", "add"],
+          description: "Optional. \"replace\" (default) makes these the only assignees; \"add\" keeps the current assignees and adds these.",
         },
         note: { type: "string", description: "New note body" },
         dueDate: {
@@ -167,7 +176,7 @@ export const cardTools = [
  * WhatsApp card IDs are "wamid-<phone>-<userId>-<boardId>" — the only ID
  * form with dashes.
  */
-function entityTypeFor(cardId: string | number): "0" | "1" | "3" {
+export function entityTypeFor(cardId: string | number): "0" | "1" | "3" {
   const s = String(cardId);
   if (s.includes("-")) return "3";
   const isTask = /^\d+$/.test(s) && s.length < 15;
@@ -227,6 +236,32 @@ function parseAssignees(raw: AssigneesResponse | null | undefined): string[] {
   }
 }
 
+/** The board a card is on: the one passed, else the card's own, read from the card. */
+export async function resolveCardBoard(
+  client: DragClient,
+  cardId: string,
+  boardId?: number,
+): Promise<number> {
+  if (boardId !== undefined && boardId !== null && Number.isInteger(Number(boardId))) return Number(boardId);
+  const detail = await client.get<DetailPageResponse>("/v1.18/entityConversation/detail-page", {
+    entityId: cardId,
+    entityType: entityTypeFor(cardId),
+    skipUpdateReadStatus: "true",
+  });
+  if (detail.BoardId === undefined || detail.BoardId === null) {
+    throw new DragApiError("Could not work out which board this card is on; pass boardId.", 400);
+  }
+  return Number(detail.BoardId);
+}
+
+/** The card's current assignees. */
+async function currentAssignees(client: DragClient, cardId: string): Promise<string[]> {
+  const raw = await client
+    .get<AssigneesResponse>("/v1.18/checklistComment/GetEmailAssignees", { threadId: cardId })
+    .catch(() => null);
+  return parseAssignees(raw);
+}
+
 export async function handleCardTool(
   client: DragClient,
   name: string,
@@ -277,6 +312,22 @@ export async function handleCardTool(
           .catch(() => null),
       ]);
 
+      const fieldsBoard = detail.BoardId ?? (args.boardId as number | undefined);
+      const customFields =
+        fieldsBoard !== undefined && fieldsBoard !== null && entityType !== "3"
+          ? await cardCustomFields(client, Number(fieldsBoard), cardId)
+          : null;
+      const noteImages = noteImageRefs(detail.Note);
+      // Whether an email thread has an unsent draft saved (read it with get_draft).
+      // A hint from DragApp's record of the draft; omitted when it can't be read.
+      let hasDraft: boolean | undefined;
+      if (entityType === "0") {
+        const peek = await client
+          .get<{ hasDraft?: boolean }>("/v1.18/mcp/draft", { threadId: cardId, peek: "1" })
+          .catch(() => null);
+        if (peek && typeof peek.hasDraft === "boolean") hasDraft = peek.hasDraft;
+      }
+
       return {
         id: cardId,
         title: detail.Title ?? null,
@@ -293,6 +344,9 @@ export async function handleCardTool(
         snoozed: detail.Snoozed ?? null,
         assignees: parseAssignees(assignees),
         entityType,
+        ...(customFields && customFields.length ? { customFields } : {}),
+        ...(noteImages.length ? { noteImages } : {}),
+        ...(hasDraft !== undefined ? { hasDraft } : {}),
       };
     }
     case "create_card": {
@@ -308,7 +362,9 @@ export async function handleCardTool(
       };
       if (args.assignee) {
         const a = args.assignee;
-        body.assignee = Array.isArray(a) ? (a as string[])[0] : a;
+        const first = String(Array.isArray(a) ? (a as string[])[0] : a);
+        const [checked] = await resolveAssignees(client, Number(args.boardId), [first]);
+        if (checked) body.assignee = checked;
       }
       if (args.note) body.note = args.note;
       if (args.comment) body.comment = args.comment;
@@ -331,7 +387,26 @@ export async function handleCardTool(
       if (args.columnId !== undefined) {
         otherFieldsBody.columnId = normalizeColumnId(args.columnId);
       }
-      if (args.assignee !== undefined) otherFieldsBody.assignee = args.assignee;
+      // An empty string changed nothing before and still changes nothing; an
+      // empty LIST unassigns everyone, as before.
+      if (args.assignee !== undefined && args.assignee !== null && args.assignee !== "") {
+        // Checked against the board's members BEFORE anything is written: the
+        // server used to save a rejected assignee onto the card anyway.
+        const given = (Array.isArray(args.assignee) ? args.assignee : [args.assignee])
+          .map((v) => String(v ?? "").trim())
+          .filter(Boolean);
+        let assignees: string[] = [];
+        if (given.length) {
+          const board = await resolveCardBoard(client, cardId, args.boardId as number | undefined);
+          assignees = await resolveAssignees(client, board, given);
+        }
+        if (args.assignMode === "add" && assignees.length) {
+          const existing = await currentAssignees(client, cardId);
+          const seen = new Set(existing.map((e) => e.toLowerCase()));
+          assignees = [...existing, ...assignees.filter((e) => !seen.has(e.toLowerCase()))];
+        }
+        otherFieldsBody.assignee = assignees;
+      }
       if (args.note !== undefined) otherFieldsBody.note = args.note;
       if (args.dueDate !== undefined) {
         otherFieldsBody.dueDate = isoToBackendDueDate(args.dueDate as string);

@@ -6,7 +6,7 @@ import { createRateLimiter } from "./rateLimit.js";
 import { createOAuthRouter, DRAG_LOGO, WWW_AUTHENTICATE } from "./oauth.js";
 
 // HTTP entry point for the hosted remote endpoint (app.dragapp.com/mcp).
-// Additive to the stdio entry point (src/index.ts) — same 47 tools, same API
+// Additive to the stdio entry point (src/index.ts) — same 55 tools, same API
 // client, same shaping, all reused from the shared core (src/server.ts). The
 // only difference is auth: the DragApp token is read per-request from the
 // Authorization header rather than a process-wide env var, so one hosted

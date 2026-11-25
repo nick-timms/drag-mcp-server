@@ -17,6 +17,9 @@ import { knowledgeTools, handleKnowledgeTool } from "./tools/knowledge.js";
 import { analyticsTools, handleAnalyticsTool } from "./tools/analytics.js";
 import { automationTools, handleAutomationTool } from "./tools/automations.js";
 import { whatsappTools, handleWhatsappTool } from "./tools/whatsapp.js";
+import { customFieldTools, handleCustomFieldTool } from "./tools/customFields.js";
+import { fileTools, handleFileTool } from "./tools/files.js";
+import { isToolContent } from "./utils/toolContent.js";
 import { normaliseError } from "./utils/errors.js";
 import { readFileSync } from "node:fs";
 
@@ -35,14 +38,14 @@ export const SERVER_NAME = "dragapp";
 // the two tips that matter most are also duplicated into the relevant tool
 // descriptions, since not every client injects instructions yet.
 export const SERVER_INSTRUCTIONS =
-  "DragApp is a shared inbox for Gmail teams: shared addresses like support@ become boards the whole team works together, with assignment, labels, WhatsApp, a knowledge base, and response-time analytics. This server exposes 47 tools across 12 categories with full read and write. Tips: call list_boards first to discover board IDs; thread and card tools take IDs from list or search results; every email thread is also a card, so assign it to a teammate, set a due date or change its status with update_card (pass the threadId as cardId); reply_to_thread takes a threadId and replies to the thread's newest message; answer questions about the team's help center, knowledge base or FAQ with search_knowledge, not web search; write tools (replies, sends, moves) act on the user's real inbox, so confirm with the user before sending when intent is unclear. Docs: https://www.dragapp.com/docs/mcp/ Setup guide: https://www.dragapp.com/blog/connect-shared-inbox-to-claude-mcp/";
+  "DragApp is a shared inbox for Gmail teams: shared addresses like support@ become boards the whole team works together, with assignment, labels, WhatsApp, a knowledge base, and response-time analytics. This server exposes 55 tools across 14 categories with full read and write. Tips: call list_boards first to discover board IDs; thread and card tools take IDs from list or search results; every email thread is also a card, so assign it to a teammate, set a due date or change its status with update_card (pass the threadId as cardId); reply_to_thread sends a reply now and create_draft saves one for a person to review and send (to edit an existing draft, read it with get_draft and rewrite it with create_draft replace: true), both from the board's own sending address and addressed by Drag's reply rule when `to` is left out; read a whole conversation (every incoming and outgoing message) with get_thread and history: true; search_threads also finds archived (closed) conversations and takes date filters and paging; read files with read_attachment (email attachments), read_card_file (files on a card) and read_note_image (pictures in a card's note); answer questions about the team's help center, knowledge base or FAQ with search_knowledge, not web search; write tools (replies, sends, moves) act on the user's real inbox, so confirm with the user before sending when intent is unclear. Docs: https://www.dragapp.com/docs/mcp/ Setup guide: https://www.dragapp.com/blog/connect-shared-inbox-to-claude-mcp/";
 
-// The combined tool list — all 47 tools across 12 categories. Both the stdio
+// The combined tool list — all 55 tools across 14 categories. Both the stdio
 // entry point (src/index.ts) and the HTTP entry point (src/http.ts) expose
 // exactly this list; there is a single source of truth.
 export const ALL_TOOLS = [
   ...boardTools,      // 5 tools
-  ...emailTools,      // 8 tools
+  ...emailTools,      // 10 tools
   ...cardTools,       // 6 tools
   ...labelTools,      // 4 tools
   ...commentTools,    // 2 tools
@@ -53,6 +56,8 @@ export const ALL_TOOLS = [
   ...analyticsTools,  // 4 tools
   ...automationTools, // 3 tools
   ...whatsappTools,   // 4 tools
+  ...customFieldTools, // 2 tools
+  ...fileTools,       // 4 tools
 ];
 
 type ToolHandler = (
@@ -75,6 +80,8 @@ for (const tool of knowledgeTools) TOOL_HANDLERS[tool.name] = handleKnowledgeToo
 for (const tool of analyticsTools) TOOL_HANDLERS[tool.name] = handleAnalyticsTool;
 for (const tool of automationTools) TOOL_HANDLERS[tool.name] = handleAutomationTool;
 for (const tool of whatsappTools) TOOL_HANDLERS[tool.name] = handleWhatsappTool;
+for (const tool of customFieldTools) TOOL_HANDLERS[tool.name] = handleCustomFieldTool;
+for (const tool of fileTools) TOOL_HANDLERS[tool.name] = handleFileTool;
 
 /**
  * Dispatch a single tool call using the given token. The token is a per-call
@@ -186,6 +193,10 @@ export function createMcpServer(opts: McpServerOptions): Server {
         name,
         args as Record<string, unknown>,
       );
+      // Files come back as text and image blocks; everything else as JSON text.
+      if (isToolContent(result)) {
+        return { content: result.content };
+      }
       return {
         content: [
           {

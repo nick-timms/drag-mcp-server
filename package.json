@@ -1,8 +1,8 @@
 {
   "name": "@dragapp/mcp-server",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "mcpName": "com.dragapp/mcp-server",
-  "description": "Shared inbox for Gmail teams: run support from Claude, ChatGPT, or Cursor. 47 tools, read and write.",
+  "description": "Shared inbox for Gmail teams: run support from Claude, ChatGPT, or Cursor. 55 tools, read and write.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -19,6 +19,7 @@
     "start:http": "node dist/http.js",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
     "prepublishOnly": "npm run build && node scripts/check-tarball.mjs",
     "check:tarball": "node scripts/check-tarball.mjs"
   },
@@ -52,7 +53,10 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "ioredis": "^5.11.1"
+    "ioredis": "^5.11.1",
+    "mammoth": "^1.13.0",
+    "read-excel-file": "^9.3.20",
+    "unpdf": "^1.9.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

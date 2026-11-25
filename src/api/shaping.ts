@@ -16,6 +16,7 @@ import type {
   Automation,
   WhatsAppTemplate,
 } from "./types.js";
+import { shapeCustomFields } from "./customFields.js";
 
 // ─── Boards (v2) ────────────────────────────────────────────────────
 
@@ -87,16 +88,7 @@ export function shapeV1Column(column: V1Column) {
 export function shapeCardCompact(card: Card) {
   // The v2 API may return fields under different casing — add fallbacks
   const raw = card as unknown as Record<string, unknown>;
-  let customFields: Record<string, unknown> = {};
-  try {
-    const cfRaw = card.CustomFields ?? raw.customFields ?? "{}";
-    const parsed = JSON.parse(cfRaw as string);
-    if (typeof parsed === "object" && parsed !== null) {
-      customFields = parsed;
-    }
-  } catch {
-    // ignore malformed custom fields
-  }
+  const customFields = shapeCustomFields(card.CustomFields ?? raw.customFields);
 
   return {
     id: card.DragTaskId ?? raw.Id ?? raw.id,
@@ -157,7 +149,7 @@ export function shapeThreadCompact(thread: ThreadListItem) {
     to: thread.threadInfoJson?.msgTo ?? [],
     isUnread: thread.readUnreadStatus === "unread-mail",
     date: thread.threadInfoJson?.msgDate ?? null,
-    assignees: thread.assignees,
+    assignees: assigneeList(thread.assignees),
     labels,
     columnId: thread.columnId,
     boardId: thread.boardId,
@@ -170,7 +162,31 @@ export function shapeThreadCompact(thread: ThreadListItem) {
       completed: thread.checkListCompleted,
     },
     commentCount: thread.comment,
+    ...namedCustomFields(thread.customFields),
   };
+}
+
+/**
+ * Assignees as a list of addresses, whichever way the API sent them: a list,
+ * or (on email threads) a JSON-encoded string.
+ */
+export function assigneeList(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/** `customFields` with each field named, only when the card has any. */
+function namedCustomFields(raw: unknown): { customFields?: ReturnType<typeof shapeCustomFields> } {
+  const fields = shapeCustomFields(raw);
+  return fields.length ? { customFields: fields } : {};
 }
 
 /**
@@ -344,14 +360,7 @@ export function shapeTaskCardCompact(item: Record<string, unknown>) {
     assignees = assigneesRaw as string[];
   }
 
-  let customFields: unknown = pick("customFields", "CustomFields");
-  if (typeof customFields === "string") {
-    try {
-      customFields = JSON.parse(customFields);
-    } catch {
-      customFields = {};
-    }
-  }
+  const customFields = shapeCustomFields(pick("customFields", "CustomFields"));
 
   const readStatus = pick("readUnreadStatus", "readStatus", "ReadUnreadStatus");
 
@@ -374,7 +383,7 @@ export function shapeTaskCardCompact(item: Record<string, unknown>) {
       completed: pick("checkListCompleted", "CheckListCompleted") ?? 0,
     },
     commentCount: pick("comment", "Comment") ?? 0,
-    customFields: customFields ?? {},
+    customFields,
   };
 }
 
