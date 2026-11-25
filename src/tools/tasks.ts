@@ -1,5 +1,6 @@
 import type { DragClient } from "../api/client.js";
 import { encodeTitleForCreate, isoToBackendDueDate } from "../utils/encoding.js";
+import { resolveAssignees } from "../api/members.js";
 
 interface CreateTaskResponse {
   taskId?: number;
@@ -72,7 +73,11 @@ export async function handleTaskTool(
         columnId: args.columnId,
         taskName: encodeTitleForCreate(args.title as string),
       };
-      if (args.assignee) body.assignee = args.assignee;
+      if (args.assignee) {
+        // Checked against the board's members before the task is created.
+        const [checked] = await resolveAssignees(client, Number(args.boardId), [String(args.assignee)]);
+        if (checked) body.assignee = checked;
+      }
       if (args.note) body.note = args.note;
       if (args.comment) body.comment = args.comment;
 

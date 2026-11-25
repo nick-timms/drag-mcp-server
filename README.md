@@ -70,7 +70,10 @@ Works with any MCP-compatible client — ChatGPT, Windsurf, Claude Code, etc.
 Ask your AI assistant:
 
 - "Show me unread emails on the Support board"
-- "Read the latest email from Acme Corp and draft a reply"
+- "Read the latest email from Acme Corp and draft a reply for me to check"
+- "What does the PDF attached to the latest invoice email say?"
+- "Find every email about refunds from the last 90 days, archived ones included"
+- "Set the Order number field on this card to 4521"
 - "Move all billing threads to the Done column"
 - "Search for emails mentioning 'invoice' on the Sales board"
 - "What's my team's average response time this week?"
@@ -81,8 +84,10 @@ Ask your AI assistant:
 
 ## Tools
 
-### Email (8 tools)
-`list_threads` · `get_thread` · `reply_to_thread` · `send_new_email` · `search_threads` · `filter_threads` · `move_thread` · `move_threads_bulk`
+### Email (10 tools)
+`list_threads` · `get_thread` · `reply_to_thread` · `create_draft` · `get_draft` · `send_new_email` · `search_threads` · `filter_threads` · `move_thread` · `move_threads_bulk`
+
+Replies and new emails are sent as the board's own sending address (its default sender, else its Google Group, else the board owner). `create_draft` saves a reply on the card for a person to review and send; nothing is sent. To edit an existing draft, read it with `get_draft` and write the new version with `create_draft` and `replace: true`. `get_thread` with `history: true` returns the whole conversation, incoming and outgoing. `search_threads` finds archived (closed) conversations too and takes date filters (`sinceDays`, `dateFrom`, `dateTo`) and paging (`limit`, `page`).
 
 ### Boards (5 tools)
 `list_boards` · `get_board` · `list_columns` · `list_board_members` · `list_teams`
@@ -117,7 +122,15 @@ Ask your AI assistant:
 ### Tasks (1 tool)
 `create_task`
 
-**47 tools across 12 categories.**
+### Custom fields (2 tools)
+`list_custom_fields` · `set_custom_field`
+
+### Files (4 tools)
+`read_attachment` · `list_card_files` · `read_card_file` · `read_note_image`
+
+PDF (scanned ones included), Word, Excel (.xlsx), CSV, text, data files (JSON, XML, YAML, logs, TSV, Markdown, HTML) and images, up to 10 MB. Text is extracted by the server; pictures are passed to your AI client to read.
+
+**55 tools across 14 categories.**
 
 ## Development
 
@@ -127,6 +140,7 @@ cd drag-mcp-server
 npm install
 cp .env.example .env  # add your API key
 npm run build
+npm test      # node --test, no network needed
 npm start
 ```
 
